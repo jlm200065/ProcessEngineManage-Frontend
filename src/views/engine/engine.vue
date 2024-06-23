@@ -35,21 +35,30 @@
 
       <el-table :data="engineList" style="width: 100%" border stripe @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="40"></el-table-column>
-        <el-table-column label="引擎类型" width="240px">
+
+        <el-table-column label="引擎类型" width="170px">
           <template slot-scope="scope">
             <img :src="getEngineTypeImage(scope.row.engineType)" :alt="scope.row.engineType" class="engine-type-image"/>
             <span>{{ scope.row.engineType }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="url" label="URL"></el-table-column>
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="name" label="名称">
+          <template slot-scope="scope">
+            <el-tag style="background-color: rgba(64, 158, 255, 0.1); border-color: #409EFF; color: #409EFF;">
+              {{ scope.row.name }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="url" label="URL" width="260px"></el-table-column>
+        <el-table-column prop="status" label="状态" width="80px">
           <template slot-scope="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
               {{ scope.row.status === 1 ? '在线' : '离线' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="名称"></el-table-column>
+
         <el-table-column label="PubSub名称" prop="pubSubName"></el-table-column>
         <el-table-column label="Topics">
           <template slot-scope="scope">
