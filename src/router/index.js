@@ -15,6 +15,7 @@ import Error404 from "../views/Error404";
 import PubSub from "@/views/pubsub/pubSub.vue";
 import Topic from "@/views/topic/topic.vue";
 import Engine from "@/views/engine/engine.vue";
+import Process from "@/views/process/process.vue";
 
 Vue.use(VueRouter)
 
@@ -42,6 +43,7 @@ const routes = [
       { path: '/pub', component: PubSub},
       { path: '/topic', component: Topic},
       { path: '/engine', component: Engine},
+      { path: '/process', component: Process},
     ]
   },
   {
