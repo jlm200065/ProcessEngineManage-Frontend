@@ -34,7 +34,7 @@
 
       <el-table :data="processList" style="width: 100%" border stripe @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="40"></el-table-column>
-        <el-table-column prop="id" label="ID" width="200px"></el-table-column>
+        <el-table-column prop="id" label="ID" width="300px"></el-table-column>
         <el-table-column prop="name" label="名称" width="200px"></el-table-column>
         <el-table-column prop="origin" label="上传者" width="150px"></el-table-column>
         <el-table-column prop="engineCategory" label="引擎类型" width="100px"></el-table-column>
