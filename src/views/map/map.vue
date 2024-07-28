@@ -143,11 +143,10 @@ export default {
       };
       myChart.setOption(optionMap);
 
-      // 添加点击事件监听器
+      // 修改点击事件监听器中的请求
       myChart.on('click', params => {
         if (params.componentType === 'geo3D' || params.componentType === 'series') {
-          const corsProxy = 'https://cors-anywhere.herokuapp.com/';
-          axios.get(`${corsProxy}http://data1.library.sh.cn/shnh/gmwx/webapi/architecture/getArchitectures?freetext=${params.name}&key=e71c9cb3d13ca40b22dfbe4382df4bb4026b2d45`)
+          axios.get(`http://localhost:8090/api/architecture?freetext=${params.name}`)
             .then(resp => {
               if (resp.data.result === "0") {
                 this.dialogTitle = params.name;
@@ -158,9 +157,9 @@ export default {
             .catch(error => {
               console.error(error);
             });
-
         }
       });
+
     },
     closeDialog() {
       this.dialogVisible = false;
