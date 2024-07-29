@@ -16,6 +16,7 @@ import PubSub from "@/views/pubsub/pubSub.vue";
 import Topic from "@/views/topic/topic.vue";
 import Engine from "@/views/engine/engine.vue";
 import Process from "@/views/process/process.vue";
+import Map_sh from "@/views/map/map.vue"
 
 Vue.use(VueRouter)
 
@@ -28,6 +29,11 @@ const routes = [
   {
     path: '/login',
     component: Login
+  },
+
+  {
+    path: '/map',
+    component: Map_sh
   },
   {
     path: '/home',
@@ -63,7 +69,7 @@ router.beforeEach((to, from, next) =>{
   //from 从哪个页面来
   //next 一个放行函数
 
-  if(to.path === '/login' || to.path === '/404') return next();
+  if(to.path === '/login' || to.path === '/404' || to.path === '/map') return next();
 
   //顶部进度条
   NProgress.start()

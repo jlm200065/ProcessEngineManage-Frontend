@@ -2,7 +2,7 @@
   <div class="login_container">
     <div class="login_box">
       <div class="title_box">
-        <p>跨企业流程引擎管理平台</p>
+        <p>跨企业流程协作管理平台</p>
       </div>
       <!-- 登录表单区域 -->
       <el-form class="login_form" :model="loginForm" :rules="loginFormRules" ref="loginFormRef">
