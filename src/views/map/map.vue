@@ -11,62 +11,29 @@
     <!-- 年份进度条 -->
     <YearSlider v-model="selectedYear" />
 
+    <!-- 留声机图标 -->
+    <Gramophone @show-video="showVideo" />
+
+    <!-- 电视机样式的视频弹窗 -->
+    <TVFrame :visible.sync="videoVisible" />
+
     <!-- 建筑弹窗 -->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" @close="closeDialog">
-      <div>
-        <p>著名建筑有：</p>
-        <ul>
-          <li v-for="item in dialogContent" :key="item.uri">
-            <el-button class="item-button" type="text" @click="showDetail(item.uri, item)">{{ item.nameS }}</el-button>
-          </li>
-        </ul>
-        <p>相关事件：</p>
-        <ul>
-          <li v-for="event in eventList" :key="event.uri">
-            <el-button
-              class="item-button"
-              type="text"
-              @click="showEventDetail(event.uri)"
-              style="position: relative; z-index: 10;"
-            >
-              {{ event.title }} ({{ event.begin }} - {{ event.end }})
-            </el-button>
-          </li>
-        </ul>
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="closeDialog">关闭</el-button>
-      </span>
-    </el-dialog>
+    <ArchitectureDialog
+      :dialogTitle="dialogTitle"
+      :dialogVisible.sync="dialogVisible"
+      :dialogContent="dialogContent"
+      :eventList="eventList"
+      @show-detail="showDetail"
+      @show-event-detail="showEventDetail"
+    />
 
     <!-- 建筑详细信息弹窗 -->
-    <el-dialog :title="detailDialogTitle" :visible.sync="detailDialogVisible" @close="closeDetailDialog">
-      <div v-if="detailContent">
-        <div class="detail-item">
-          <span class="label">建筑名称:</span>
-          <span class="value">{{ detailContent.nameS }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">地址:</span>
-          <span class="value">{{ detailContent.address }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">类型:</span>
-          <span class="value">{{ detailContent.type }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">描述:</span>
-          <span class="value">{{ currentItem.des }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">地区:</span>
-          <span class="value">{{ currentItem.placeValue }}</span>
-        </div>
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="closeDetailDialog">关闭</el-button>
-      </span>
-    </el-dialog>
+    <ArchitectureDetailDialog
+      :detailDialogTitle="detailDialogTitle"
+      :detailDialogVisible.sync="detailDialogVisible"
+      :detailContent="detailContent"
+      :currentItem="currentItem"
+    />
 
     <!-- 事件详细信息弹窗 -->
     <EventDetailDialog
@@ -82,12 +49,20 @@ import axios from 'axios';
 import * as echarts from 'echarts';
 import 'echarts-gl';
 import YearSlider from './YearSlider.vue';
+import ArchitectureDialog from './ArchitectureDialog.vue';
+import ArchitectureDetailDialog from './ArchitectureDetailDialog.vue';
 import EventDetailDialog from './EventDetailDialog.vue';
+import Gramophone from './Gramophone.vue';
+import TVFrame from './TVFrame.vue';
 
 export default {
   components: {
     YearSlider,
-    EventDetailDialog
+    ArchitectureDialog,
+    ArchitectureDetailDialog,
+    EventDetailDialog,
+    Gramophone,
+    TVFrame
   },
   data() {
     return {
@@ -103,7 +78,8 @@ export default {
       currentRegionName: '',
       eventDetailDialogVisible: false,
       eventDetailDialogTitle: '',
-      eventDetailContent: null
+      eventDetailContent: null,
+      videoVisible: false
     };
   },
   mounted() {
@@ -290,11 +266,8 @@ export default {
           console.error(error);
         });
     },
-    closeDialog() {
-      this.dialogVisible = false;
-    },
-    closeDetailDialog() {
-      this.detailDialogVisible = false;
+    showVideo() {
+      this.videoVisible = true;
     }
   }
 };
@@ -330,38 +303,5 @@ export default {
   border-radius: 5px;
   z-index: 1000;
   font-size: 30px; /* 调整字体大小 */
-}
-
-.item-button {
-  border: 1px solid #007bff;
-  color: #007bff;
-  padding: 5px 10px;
-  margin: 5px 0;
-  display: inline-block;
-  cursor: pointer;
-  position: relative;
-  z-index: 10; /* 确保按钮位于上层 */
-}
-
-.item-button:hover {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.detail-item {
-  margin: 10px 0;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-}
-
-.label {
-  font-weight: bold;
-  color: #333;
-}
-
-.value {
-  color: #555;
 }
 </style>
