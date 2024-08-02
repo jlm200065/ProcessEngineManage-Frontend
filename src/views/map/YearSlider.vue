@@ -5,14 +5,14 @@
         class="year-marker"
         v-for="year in years"
         :key="year"
-        :style="{ left: `${(year - 1800) * stepWidth}px` }"
+        :style="{ left: `${(year - 1850) * stepWidth}px` }"
       >
         <span v-if="year % 10 === 0">{{ year }}</span>
         <span v-else class="tooltip">{{ year }}</span>
       </div>
       <div
         class="year-ball"
-        :style="{ left: `${(currentYear - 1800) * stepWidth}px` }"
+        :style="{ left: `${(currentYear - 1850) * stepWidth}px` }"
         @mousedown.stop="startDrag($event)"
       >
         <div class="ball-tooltip">{{ currentYear }}</div>
@@ -28,10 +28,10 @@ export default {
   },
   data() {
     return {
-      currentYear: this.value || 1800, // 初始化为父组件传递的年份
+      currentYear: this.value || 1850, // 初始化为父组件传递的年份
       isDragging: false,
-      years: Array.from({ length: 2024 - 1800 + 1 }, (_, i) => 1800 + i),
-      stepWidth: 40, // 每年的宽度，可以根据需要调整
+      years: Array.from({length: 2020 - 1850 + 1}, (_, i) => 1850 + i),
+      stepWidth: 5, // 每年的宽度
     };
   },
   watch: {
@@ -60,8 +60,8 @@ export default {
     getYearFromPosition(position) {
       const sliderRect = this.$refs.slider.getBoundingClientRect();
       const relativePosition = position - sliderRect.left;
-      let year = Math.round(relativePosition / this.stepWidth) + 1800;
-      year = Math.max(1800, Math.min(2024, year));
+      let year = Math.round(relativePosition / this.stepWidth) + 1850;
+      year = Math.max(1850, Math.min(2020, year));
       return year;
     },
     onSliderClick(event) {
@@ -78,22 +78,22 @@ export default {
   position: fixed;
   top: 10px;
   right: 10px;
-  width: 1200px; /* 宽度可以根据需要调整 */
-  height: 50px;
+  width: 900px; /* 调整宽度以适应新大小 */
+  height: 40px;
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 5px;
-  padding: 10px;
+  padding: 5px;
   display: flex;
   align-items: center;
-  overflow-x: scroll;
+  overflow-x: hidden;
   overflow-y: hidden;
 }
 
 .year-slider {
   position: relative;
-  width: 9000px; /* 调整宽度以适应所有年份 */
-  height: 30px;
-  background-color: #ccc;
+  width: 850px; /* 调整宽度以适应所有年份 */
+  height: 20px;
+  background-color: transparent;
   border-radius: 10px;
   cursor: pointer;
 }
@@ -101,12 +101,13 @@ export default {
 .year-marker {
   position: absolute;
   top: 0;
-  width: 40px; /* 增加宽度以显示完整年份 */
-  height: 20px;
-  background-color: #007bff;
+  width: 5px;
+  height: 15px;
+  background-color: transparent;
   color: #fff;
   text-align: center;
-  line-height: 20px;
+  line-height: 15px;
+  font-size: 10px; /* 调整字体大小 */
 }
 
 .year-marker .tooltip {
@@ -116,21 +117,22 @@ export default {
 .year-marker:hover .tooltip {
   display: block;
   position: absolute;
-  top: -25px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%);
   background-color: #000;
   color: #fff;
-  padding: 5px;
+  padding: 3px;
   border-radius: 3px;
   white-space: nowrap;
+  font-size: 10px; /* 调整字体大小 */
 }
 
 .year-ball {
   position: absolute;
-  top: 0px; /* 调整小球的位置 */
-  width: 20px;
-  height: 20px;
+  top: 2px; /* 调整小球的位置 */
+  width: 8px;
+  height: 8px;
   background-color: #ff5722;
   border-radius: 50%;
   cursor: pointer;
@@ -138,13 +140,18 @@ export default {
 
 .year-ball .ball-tooltip {
   position: absolute;
-  top: 20px; /* 调整小球提示的位置 */
+  top: 15px; /* 调整小球提示的位置 */
   left: 50%;
   transform: translateX(-50%);
   background-color: #000;
   color: #fff;
-  padding: 5px;
+  padding: 3px;
   border-radius: 3px;
   white-space: nowrap;
+  font-size: 10px; /* 调整字体大小 */
+}
+
+.year-slider-container:hover .year-slider {
+  background-color: rgba(0, 123, 255, 0.3); /* 鼠标悬停时显示的细蓝色滑动条 */
 }
 </style>
