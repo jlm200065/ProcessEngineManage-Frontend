@@ -220,7 +220,7 @@ export default {
         if (params.componentType === 'geo3D' || params.componentType === 'series') {
           axios.get(`http://localhost:8090/api/architecture?freetext=${params.name}`)
             .then(resp => {
-              if (resp.data.result === "0") {
+              if (resp.data.result === "0" || resp.data.result === "1") {
                 this.dialogTitle = params.name;
                 this.dialogContent = resp.data.data;
                 this.dialogVisible = true;
@@ -279,7 +279,7 @@ export default {
     showDetail(uri, item) {
       axios.get(`http://localhost:8090/architectureDetail?uri=${uri}`)
         .then(resp => {
-          if (resp.data.result === "0") {
+          if (resp.data.result === "0" || resp.data.result === "1") {
             this.detailDialogTitle = "详细信息";
             this.detailContent = resp.data.data[0];
             this.detailDialogVisible = true;
