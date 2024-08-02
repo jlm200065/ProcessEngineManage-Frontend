@@ -17,6 +17,12 @@
     <!-- 电视机样式的视频弹窗 -->
     <TVFrame :visible.sync="videoVisible" />
 
+    <!-- AI助手图标 -->
+    <AIAssistant @show-dialog="showAIDialog" />
+
+    <!-- AI助手对话框 -->
+    <AIAssistantDialog :visible.sync="aiDialogVisible" />
+
     <!-- 建筑弹窗 -->
     <ArchitectureDialog
       :dialogTitle="dialogTitle"
@@ -40,6 +46,14 @@
       :visible.sync="eventDetailDialogVisible"
       :title="eventDetailDialogTitle"
       :content="eventDetailContent"
+      @show-person-introduction="showPersonIntroduction"
+    />
+
+    <!-- 人物介绍弹窗 -->
+    <PersonIntroduction
+      :visible.sync="personIntroductionVisible"
+      :title="personIntroductionTitle"
+      :content="personIntroductionContent"
     />
   </div>
 </template>
@@ -54,6 +68,9 @@ import ArchitectureDetailDialog from './ArchitectureDetailDialog.vue';
 import EventDetailDialog from './EventDetailDialog.vue';
 import Gramophone from './Gramophone.vue';
 import TVFrame from './TVFrame.vue';
+import AIAssistant from './AIAssistant.vue';
+import AIAssistantDialog from './AIAssistantDialog.vue';
+import PersonIntroduction from './PersonIntroduction.vue';
 
 export default {
   components: {
@@ -62,7 +79,10 @@ export default {
     ArchitectureDetailDialog,
     EventDetailDialog,
     Gramophone,
-    TVFrame
+    TVFrame,
+    AIAssistant,
+    AIAssistantDialog,
+    PersonIntroduction
   },
   data() {
     return {
@@ -79,7 +99,11 @@ export default {
       eventDetailDialogVisible: false,
       eventDetailDialogTitle: '',
       eventDetailContent: null,
-      videoVisible: false
+      videoVisible: false,
+      aiDialogVisible: false, // AI Assistant dialog visibility
+      personIntroductionVisible: false,
+      personIntroductionTitle: '',
+      personIntroductionContent: ''
     };
   },
   mounted() {
@@ -268,6 +292,30 @@ export default {
     },
     showVideo() {
       this.videoVisible = true;
+    },
+    showAIDialog() {
+      this.aiDialogVisible = true;
+    },
+    showPersonIntroduction(personUri, personLabel) {
+      this.personIntroductionTitle = personLabel;
+      this.personIntroductionContent = '大模型正在生成人物介绍...';
+      this.personIntroductionVisible = true;
+
+      axios.post('http://localhost:8090/api/rag', {
+        appId: '404bf78d45714e4a818dce493509a4a8',
+        prompt: `请你介绍一下${personLabel}这个人物`
+      })
+        .then(resp => {
+          if (resp.data.code === 200) {
+            this.personIntroductionContent = resp.data.data;
+          } else {
+            this.personIntroductionContent = '获取人物介绍失败，请稍后再试。';
+          }
+        })
+        .catch(error => {
+          console.error(error);
+          this.personIntroductionContent = '获取人物介绍失败，请稍后再试。';
+        });
     }
   }
 };

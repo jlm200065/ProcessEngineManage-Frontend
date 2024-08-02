@@ -21,7 +21,7 @@
       </div>
       <div class="person-list">
         <span class="label">人物:</span>
-        <div v-for="person in content.personList" :key="person.uri" class="person-item" @click="handlePersonClick(person.uri)">
+        <div v-for="person in content.personList" :key="person.uri" class="person-item" @click="handlePersonClick(person.uri, person.label)">
           {{ person.label }}
         </div>
       </div>
@@ -52,8 +52,8 @@ export default {
     closeDialog() {
       this.$emit('update:visible', false);
     },
-    handlePersonClick(uri) {
-      console.log("Person URI:", uri);
+    handlePersonClick(uri, label) {
+      this.$emit('show-person-introduction', uri, label);
     }
   }
 };
