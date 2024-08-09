@@ -21,7 +21,8 @@
     <AIAssistant @show-dialog="showAIDialog" />
 
     <!-- AI助手对话框 -->
-    <AIAssistantDialog :visible.sync="aiDialogVisible" />
+    <AIAssistantDialog ref="aiDialog" :visible.sync="aiDialogVisible" />
+
 
     <!-- 建筑弹窗 -->
     <ArchitectureDialog
@@ -39,6 +40,7 @@
       :detailDialogVisible.sync="detailDialogVisible"
       :detailContent="detailContent"
       :currentItem="currentItem"
+      @send-message-to-ai="sendMessageToAIAssistant"
     />
 
     <!-- 事件详细信息弹窗 -->
@@ -100,7 +102,7 @@ export default {
       eventDetailDialogTitle: '',
       eventDetailContent: null,
       videoVisible: false,
-      aiDialogVisible: false, // AI Assistant dialog visibility
+      aiDialogVisible: false,
       personIntroductionVisible: false,
       personIntroductionTitle: '',
       personIntroductionContent: ''
@@ -296,6 +298,16 @@ export default {
     showAIDialog() {
       this.aiDialogVisible = true;
     },
+    sendMessageToAIAssistant(message) {
+      // 检查 aiDialog 的引用是否存在，并且是否具有 sendMessage 方法
+      if (this.$refs.aiDialog && typeof this.$refs.aiDialog.sendMessage === 'function') {
+        this.aiDialogVisible = true; // 显示 AI 助手对话框
+        this.$refs.aiDialog.sendMessage(message); // 调用 sendMessage 方法发送消息
+      } else {
+        console.error("无法找到 AIAssistantDialog 组件或 sendMessage 方法未定义。");
+      }
+    },
+
     showPersonIntroduction(personUri, personLabel) {
       this.personIntroductionTitle = personLabel;
       this.personIntroductionContent = '大模型正在生成人物介绍...';

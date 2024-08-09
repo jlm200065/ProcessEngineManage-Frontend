@@ -1,9 +1,16 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" width="50%" @close="closeDialog">
+  <el-dialog :visible.sync="dialogVisible" width="80%" @close="closeDialog">
     <div class="chat-container">
       <div class="messages-list">
-        <div v-for="(message, index) in messages" :key="index" :class="messageClass(message.sender)">
-          {{ message.content }}
+        <div
+          v-for="(message, index) in messages"
+          :key="index"
+          :class="messageClass(message.sender)"
+        >
+          <div v-if="message.type === 'text'" v-html="renderMarkdown(message.content)"></div>
+          <div v-else-if="message.type === 'video'">
+            <video controls :src="message.content" width="100%"></video>
+          </div>
         </div>
         <div v-if="isTyping" class="typing-indicator">对方正在输入...</div>
       </div>
@@ -23,6 +30,7 @@
 
 <script>
 import axios from 'axios';
+import MarkdownIt from 'markdown-it';
 
 export default {
   props: {
@@ -36,7 +44,8 @@ export default {
       dialogVisible: this.visible,
       userMessage: '',
       messages: [],
-      isTyping: false
+      isTyping: false,
+      markdown: new MarkdownIt()
     };
   },
   watch: {
@@ -51,16 +60,23 @@ export default {
     closeDialog() {
       this.dialogVisible = false;
     },
-    sendMessage() {
-      if (this.userMessage.trim()) {
+    sendMessage(messageContent = null) {
+      if (messageContent instanceof Event) {
+        messageContent = null;
+      }
+      const content = messageContent !== null ? String(messageContent).trim() : this.userMessage.trim();
+      if (content) {
         const message = {
           sender: 'user',
-          content: this.userMessage
+          content: content,
+          type: 'text'
         };
         this.messages.push(message);
-        this.userMessage = '';
+        if (!messageContent) {
+          this.userMessage = '';
+        }
         this.scrollToBottom();
-        this.sendToApi(message.content);
+        this.sendToApi(content);
       }
     },
     async sendToApi(prompt) {
@@ -70,11 +86,32 @@ export default {
           appId: "404bf78d45714e4a818dce493509a4a8",
           prompt: prompt
         });
-        const aiMessage = {
-          sender: 'ai',
-          content: response.data.data
-        };
-        this.messages.push(aiMessage);
+        const content = response.data.data;
+
+        // Check for .mp4 URL and handle accordingly
+        const mp4Url = content.match(/https?:\/\/\S+\.mp4/);
+        if (mp4Url) {
+          // If .mp4 URL is found, push two messages: one for text and one for video
+          const aiTextMessage = {
+            sender: 'ai',
+            content: content.replace(mp4Url[0], ''), // Remove the URL from the text content
+            type: 'text'
+          };
+          const aiVideoMessage = {
+            sender: 'ai',
+            content: mp4Url[0], // URL for the video content
+            type: 'video'
+          };
+          this.messages.push(aiTextMessage, aiVideoMessage);
+        } else {
+          // Otherwise, just push the text message
+          const aiMessage = {
+            sender: 'ai',
+            content: content,
+            type: 'text'
+          };
+          this.messages.push(aiMessage);
+        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -90,6 +127,9 @@ export default {
     },
     messageClass(sender) {
       return sender === 'user' ? 'user-message' : 'ai-message';
+    },
+    renderMarkdown(content) {
+      return this.markdown.render(content);
     }
   }
 };
@@ -99,7 +139,8 @@ export default {
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 400px;
+  height: 500px;
+  width: 1150px;
 }
 
 .messages-list {

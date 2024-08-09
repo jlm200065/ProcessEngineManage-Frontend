@@ -3,7 +3,9 @@
     <div v-if="detailContent">
       <div class="detail-item">
         <span class="label">建筑名称:</span>
-        <span class="value">{{ detailContent.nameS }}</span>
+        <el-button type="text" class="value" @click="sendMessageToAIAssistant(detailContent.nameS)">
+          {{ detailContent.nameS }}
+        </el-button>
       </div>
       <div class="detail-item">
         <span class="label">地址:</span>
@@ -39,6 +41,9 @@ export default {
   methods: {
     closeDetailDialog() {
       this.$emit('update:detailDialogVisible', false);
+    },
+    sendMessageToAIAssistant(buildingName) {
+      this.$emit('send-message-to-ai', `告诉我更多关于${buildingName}`);
     }
   }
 };
@@ -59,6 +64,12 @@ export default {
 }
 
 .value {
-  color: #555;
+  color: #1890ff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.value:hover {
+  color: #40a9ff;
 }
 </style>
