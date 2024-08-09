@@ -31,6 +31,7 @@
 <script>
 import axios from 'axios';
 import MarkdownIt from 'markdown-it';
+import config from "@/config";
 
 export default {
   props: {
@@ -82,7 +83,7 @@ export default {
     async sendToApi(prompt) {
       this.isTyping = true;
       try {
-        const response = await axios.post('http://localhost:8090/api/rag', {
+        const response = await axios.post(config.tongyiUrl + 'api/rag', {
           appId: "404bf78d45714e4a818dce493509a4a8",
           prompt: prompt
         });

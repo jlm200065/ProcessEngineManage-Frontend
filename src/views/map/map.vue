@@ -73,6 +73,7 @@ import TVFrame from './TVFrame.vue';
 import AIAssistant from './AIAssistant.vue';
 import AIAssistantDialog from './AIAssistantDialog.vue';
 import PersonIntroduction from './PersonIntroduction.vue';
+import config from "@/config";
 
 export default {
   components: {
@@ -220,7 +221,7 @@ export default {
 
       myChart.on('click', params => {
         if (params.componentType === 'geo3D' || params.componentType === 'series') {
-          axios.get(`http://localhost:8090/api/architecture?freetext=${params.name}`)
+          axios.get(config.tongyiUrl + `api/architecture?freetext=${params.name}`)
             .then(resp => {
               if (resp.data.result === "0" || resp.data.result === "1") {
                 this.dialogTitle = params.name;
@@ -245,7 +246,7 @@ export default {
     },
     fetchEvents(regionName) {
       this.eventList = [];
-      axios.get(`http://localhost:8090/api/eventListByText?eventFreeText=${regionName}`)
+      axios.get(config.tongyiUrl + `api/eventListByText?eventFreeText=${regionName}`)
         .then(resp => {
           if (resp.data.result === "0") {
             this.eventList = resp.data.data;
@@ -255,7 +256,7 @@ export default {
           console.error(error);
         });
 
-      axios.get(`http://localhost:8090/api/eventListByDate?eventDate=${this.selectedYear}`)
+      axios.get(config.tongyiUrl + `api/eventListByDate?eventDate=${this.selectedYear}`)
         .then(resp => {
           if (resp.data.result === "0") {
             this.eventList = this.eventList.concat(resp.data.data);
@@ -266,7 +267,7 @@ export default {
         });
     },
     showEventDetail(uri) {
-      axios.get(`http://localhost:8090/api/eventDetail?uri=${uri}`)
+      axios.get(config.tongyiUrl + `api/eventDetail?uri=${uri}`)
         .then(resp => {
           if (resp.data.result === "0") {
             this.eventDetailDialogTitle = "事件详细信息";
@@ -279,7 +280,7 @@ export default {
         });
     },
     showDetail(uri, item) {
-      axios.get(`http://localhost:8090/architectureDetail?uri=${uri}`)
+      axios.get(config.tongyiUrl + `architectureDetail?uri=${uri}`)
         .then(resp => {
           if (resp.data.result === "0" || resp.data.result === "1") {
             this.detailDialogTitle = "详细信息";
@@ -313,7 +314,7 @@ export default {
       this.personIntroductionContent = '大模型正在生成人物介绍...';
       this.personIntroductionVisible = true;
 
-      axios.post('http://localhost:8090/api/rag', {
+      axios.post(config.tongyiUrl + 'api/rag', {
         appId: '404bf78d45714e4a818dce493509a4a8',
         prompt: `请你介绍一下${personLabel}这个人物`
       })
