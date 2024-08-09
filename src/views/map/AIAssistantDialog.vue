@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" width="80%" @close="closeDialog">
+  <el-dialog :visible.sync="dialogVisible" width="85%" @close="closeDialog">
     <div class="chat-container">
       <div class="messages-list">
         <div
@@ -86,32 +86,32 @@ export default {
           appId: "404bf78d45714e4a818dce493509a4a8",
           prompt: prompt
         });
-        const content = response.data.data;
+        let content = response.data.data;
 
-        // Check for .mp4 URL and handle accordingly
-        const mp4Url = content.match(/https?:\/\/\S+\.mp4/);
-        if (mp4Url) {
-          // If .mp4 URL is found, push two messages: one for text and one for video
-          const aiTextMessage = {
-            sender: 'ai',
-            content: content.replace(mp4Url[0], ''), // Remove the URL from the text content
-            type: 'text'
-          };
+        // Find all .mp4 URLs
+        const mp4Urls = content.match(/https?:\/\/\S+\.mp4/g) || [];
+        mp4Urls.forEach((url, index) => {
+          // Replace the Markdown link with a placeholder text like "第x个视频"
+          content = content.replace(new RegExp(`\\[.*?\\]\\(${url}\\)`, 'g'), `第${index + 1}个视频`);
+        });
+
+        // Push the text message with the replaced content
+        const aiTextMessage = {
+          sender: 'ai',
+          content: content,
+          type: 'text'
+        };
+        this.messages.push(aiTextMessage);
+
+        // Push each video link as a separate video message
+        mp4Urls.forEach((url) => {
           const aiVideoMessage = {
             sender: 'ai',
-            content: mp4Url[0], // URL for the video content
+            content: url,
             type: 'video'
           };
-          this.messages.push(aiTextMessage, aiVideoMessage);
-        } else {
-          // Otherwise, just push the text message
-          const aiMessage = {
-            sender: 'ai',
-            content: content,
-            type: 'text'
-          };
-          this.messages.push(aiMessage);
-        }
+          this.messages.push(aiVideoMessage);
+        });
       } catch (error) {
         console.error(error);
       } finally {

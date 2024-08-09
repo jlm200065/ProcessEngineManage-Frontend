@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" width="80%" @close="closeDialog">
+  <el-dialog :visible.sync="dialogVisible" width="90%" @close="closeDialog">
     <div class="chat-container">
       <div class="messages-list">
         <div

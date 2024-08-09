@@ -9,19 +9,27 @@
       </div>
       <div class="detail-item">
         <span class="label">地址:</span>
-        <span class="value">{{ detailContent.address }}</span>
+        <el-button type="text" class="value" @click="sendMessageToAIAssistant(detailContent.address)">
+          {{ detailContent.address }}
+        </el-button>
       </div>
       <div class="detail-item">
         <span class="label">类型:</span>
-        <span class="value">{{ detailContent.type }}</span>
+        <el-button type="text" class="value" @click="sendMessageToAIAssistant(detailContent.type)">
+          {{ detailContent.type }}
+        </el-button>
       </div>
       <div class="detail-item">
         <span class="label">描述:</span>
-        <span class="value">{{ currentItem.des }}</span>
+        <el-button type="text" class="value" @click="sendMessageToAIAssistant(currentItem.des)">
+          {{ currentItem.des }}
+        </el-button>
       </div>
       <div class="detail-item">
         <span class="label">地区:</span>
-        <span class="value">{{ currentItem.placeValue }}</span>
+        <el-button type="text" class="value" @click="sendMessageToAIAssistant(currentItem.placeValue)">
+          {{ currentItem.placeValue }}
+        </el-button>
       </div>
     </div>
     <span slot="footer" class="dialog-footer">
@@ -42,8 +50,8 @@ export default {
     closeDetailDialog() {
       this.$emit('update:detailDialogVisible', false);
     },
-    sendMessageToAIAssistant(buildingName) {
-      this.$emit('send-message-to-ai', `告诉我更多关于${buildingName}`);
+    sendMessageToAIAssistant(value) {
+      this.$emit('send-message-to-ai', `关于${value}`);
     }
   }
 };
@@ -56,17 +64,25 @@ export default {
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #f9f9f9;
+  overflow: hidden;
 }
 
 .label {
   font-weight: bold;
   color: #333;
+  margin-right: 10px;
 }
 
 .value {
   color: #1890ff;
   cursor: pointer;
   text-decoration: underline;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-all;
+  display: inline-block;
+  max-width: 70%;
+  vertical-align: middle;
 }
 
 .value:hover {
