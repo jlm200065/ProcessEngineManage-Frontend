@@ -8,8 +8,9 @@
     <el-card class="box-card">
       <div class="echarts" ref="echarts"></div>
     </el-card>
+
     <!-- 年份进度条 -->
-    <YearSlider v-model="selectedYear" />
+    <YearSlider v-model="selectedYear" @select-period="handleSelectPeriod" />
 
     <!-- 留声机图标 -->
     <Gramophone @show-video="showVideo" />
@@ -32,7 +33,9 @@
       :eventList="eventList"
       @show-detail="showDetail"
       @show-event-detail="showEventDetail"
+      @add-to-gossip="handleAddToGossip"
     />
+
 
     <!-- 建筑详细信息弹窗 -->
     <ArchitectureDetailDialog
@@ -49,7 +52,9 @@
       :title="eventDetailDialogTitle"
       :content="eventDetailContent"
       @show-person-introduction="showPersonIntroduction"
+      @add-to-gossip="handleAddToGossip"
     />
+
 
     <!-- 人物介绍弹窗 -->
     <PersonIntroduction
@@ -57,6 +62,23 @@
       :title="personIntroductionTitle"
       :content="personIntroductionContent"
     />
+
+
+    <!-- 讲故事智能助手对话框 -->
+    <AIAssistantForStoryDialog ref="storyDialog" :visible.sync="storyDialogVisible" />
+    <!-- Gossip 组件 -->
+    <Gossip
+      :selectedPeriod="selectedPeriod"
+      :location="gossipLocation"
+      :character="gossipCharacter"
+      :other="gossipOther"
+      @generate-story="sendStoryToAssistant"
+    />
+    <!-- 监听 generate-story 事件 -->
+
+
+    <!-- 历史Gossip按钮 -->
+    <button class="history-gossip-button" @click="openStoryDialog">历史Gossip</button>
   </div>
 </template>
 
@@ -73,6 +95,9 @@ import TVFrame from './TVFrame.vue';
 import AIAssistant from './AIAssistant.vue';
 import AIAssistantDialog from './AIAssistantDialog.vue';
 import PersonIntroduction from './PersonIntroduction.vue';
+// 导入新增的 Gossip 组件
+import Gossip from './Gossip.vue';
+import AIAssistantForStoryDialog from './AIAssistantForStoryDialog.vue';
 import config from "@/config";
 
 export default {
@@ -85,11 +110,17 @@ export default {
     TVFrame,
     AIAssistant,
     AIAssistantDialog,
-    PersonIntroduction
+    PersonIntroduction,
+    Gossip,
+    AIAssistantForStoryDialog,
   },
   data() {
     return {
       selectedYear: 1800,
+      selectedPeriod: '', // 用于存储从 YearSlider 传递过来的时期名称
+      gossipLocation: '', // 用于存储从 ArchitectureDialog 传递过来的建筑名称
+      gossipCharacter: '',
+      gossipOther: '',
       dialogVisible: false,
       dialogTitle: '',
       dialogContent: [],
@@ -106,13 +137,41 @@ export default {
       aiDialogVisible: false,
       personIntroductionVisible: false,
       personIntroductionTitle: '',
-      personIntroductionContent: ''
+      personIntroductionContent: '',
+      storyDialogVisible: false, // 控制讲故事对话框的可见性
     };
   },
   mounted() {
     this.initEcharts();
   },
   methods: {
+    openStoryDialog() {
+      this.storyDialogVisible = true;
+    },
+    sendStoryToAssistant(prompt) {
+      // 检查 storyDialog 的引用是否存在，并且是否具有 sendMessage 方法
+      if (this.$refs.storyDialog && typeof this.$refs.storyDialog.sendMessage === 'function') {
+        this.storyDialogVisible = true; // 显示讲故事对话框
+        this.$refs.storyDialog.sendMessage(prompt); // 调用 sendMessage 方法发送消息
+      } else {
+        console.error("无法找到 AIAssistantForStoryDialog 组件或 sendMessage 方法未定义。");
+      }
+    },
+    // handleAddToGossip(location) {
+    //   this.gossipLocation = location; // 接收来自 ArchitectureDialog 的建筑名称
+    // },
+    handleAddToGossip({ field, value }) {
+      if (field === 'location') {
+        this.gossipLocation = value;
+      } else if (field === 'character') {
+        this.gossipCharacter = value;
+      } else if (field === 'other') {
+        this.gossipOther = value;
+      }
+    },
+    handleSelectPeriod(period) {
+      this.selectedPeriod = period; // 接收来自 YearSlider 的时期名称
+    },
     initEcharts() {
       axios.get('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/data.json')
         .then(resp => {
@@ -364,5 +423,22 @@ export default {
   border-radius: 5px;
   z-index: 1000;
   font-size: 30px; /* 调整字体大小 */
+}
+.history-gossip-button {
+  position: fixed;
+  top: 105px;  /* 调整顶部的距离 */
+  left: 20px; /* 调整左侧的距离 */
+  padding: 10px 20px;
+  background-color: rgba(173, 216, 230, 0.7); /* 淡蓝色透明背景 */
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 1000; /* 提升按钮的层级 */
+}
+
+.history-gossip-button:hover {
+  background-color: rgba(173, 216, 230, 0.9); /* 悬停时加深背景色 */
 }
 </style>

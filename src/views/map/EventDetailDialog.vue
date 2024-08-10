@@ -5,9 +5,19 @@
         <span class="label">日期:</span>
         <span class="value">{{ content.dateLabel }}</span>
       </div>
-      <div class="detail-item">
+      <div class="detail-item" style="display: flex; align-items: center;">
         <span class="label">标题:</span>
         <span class="value">{{ content.title }}</span>
+        <el-button
+          class="gossip-button"
+          type="text"
+          icon="el-icon-plus"
+          size="mini"
+          @click="addToGossip('other', content.title)"
+          style="margin-left: 10px;"
+        >
+          加入噶讪胡
+        </el-button>
       </div>
       <div class="detail-item">
         <span class="label">描述:</span>
@@ -21,8 +31,20 @@
       </div>
       <div class="person-list">
         <span class="label">人物:</span>
-        <div v-for="person in content.personList" :key="person.uri" class="person-item" @click="handlePersonClick(person.uri, person.label)">
-          {{ person.label }}
+        <div v-for="person in content.personList" :key="person.uri" class="person-item-container">
+          <div class="person-item" @click="handlePersonClick(person.uri, person.label)">
+            {{ person.label }}
+          </div>
+          <el-button
+            class="gossip-button"
+            type="text"
+            icon="el-icon-plus"
+            size="mini"
+            @click="addToGossip('character', person.label)"
+            style="margin-left: 10px;"
+          >
+            加入噶讪胡
+          </el-button>
         </div>
       </div>
     </div>
@@ -54,6 +76,9 @@ export default {
     },
     handlePersonClick(uri, label) {
       this.$emit('show-person-introduction', uri, label);
+    },
+    addToGossip(field, value) {
+      this.$emit('add-to-gossip', { field, value });
     }
   }
 };
@@ -87,10 +112,14 @@ export default {
   margin: 10px 0;
 }
 
+.person-item-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
 .person-item {
-  display: inline-block;
   padding: 5px 10px;
-  margin: 5px;
   border: 1px solid #007bff;
   color: #007bff;
   cursor: pointer;
@@ -100,5 +129,21 @@ export default {
 .person-item:hover {
   background-color: #007bff;
   color: #fff;
+}
+
+.gossip-button {
+  margin-left: 10px;
+  font-size: 12px; /* 小字体 */
+  background-color: rgba(70, 130, 180, 0.3); /* 淡蓝色半透明背景 */
+  color: #4682b4; /* 淡蓝色字体 */
+  padding: 2px 5px; /* 调整按钮大小 */
+  border: none;
+  border-radius: 3px; /* 添加圆角 */
+  cursor: pointer;
+}
+
+.gossip-button:hover {
+  background-color: rgba(70, 130, 180, 0.6); /* 鼠标悬停时背景颜色变深 */
+  color: #ffffff; /* 鼠标悬停时字体变为白色 */
 }
 </style>
