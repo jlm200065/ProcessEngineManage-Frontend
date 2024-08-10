@@ -15,6 +15,8 @@
     <!-- 留声机图标 -->
     <Gramophone @show-video="showVideo" />
 
+    <!-- 实验室 Logo 组件 -->
+    <LabLogo />
     <!-- 电视机样式的视频弹窗 -->
     <TVFrame :visible.sync="videoVisible" />
 
@@ -24,7 +26,8 @@
     <!-- AI助手对话框 -->
     <AIAssistantDialog ref="aiDialog" :visible.sync="aiDialogVisible" />
 
-
+    <!-- 展示牌组件 -->
+    <RegionDisplay :regionName="displayRegionName" :visible="displayVisible" />
     <!-- 建筑弹窗 -->
     <ArchitectureDialog
       :dialogTitle="dialogTitle"
@@ -99,6 +102,8 @@ import PersonIntroduction from './PersonIntroduction.vue';
 import Gossip from './Gossip.vue';
 import AIAssistantForStoryDialog from './AIAssistantForStoryDialog.vue';
 import config from "@/config";
+import LabLogo from './LabLogo.vue';  // 引入LabLogo组件
+import RegionDisplay from './RegionDisplay.vue';  // 引入RegionDisplay组件
 
 export default {
   components: {
@@ -113,12 +118,14 @@ export default {
     PersonIntroduction,
     Gossip,
     AIAssistantForStoryDialog,
+    LabLogo,  // 注册LabLogo组件
+    RegionDisplay
   },
   data() {
     return {
       selectedYear: 1800,
-      selectedPeriod: '', // 用于存储从 YearSlider 传递过来的时期名称
-      gossipLocation: '', // 用于存储从 ArchitectureDialog 传递过来的建筑名称
+      selectedPeriod: '',
+      gossipLocation: '',
       gossipCharacter: '',
       gossipOther: '',
       dialogVisible: false,
@@ -138,28 +145,37 @@ export default {
       personIntroductionVisible: false,
       personIntroductionTitle: '',
       personIntroductionContent: '',
-      storyDialogVisible: false, // 控制讲故事对话框的可见性
+      storyDialogVisible: false,
+      displayRegionName: '',  // 展示牌显示的地区名称
+      displayVisible: false,  // 控制展示牌的显示与隐藏
     };
   },
   mounted() {
     this.initEcharts();
+
+    // 每3秒刷新一次高亮地点
+    this.refreshInterval = setInterval(() => {
+      this.initEcharts();
+    }, 4000);
+  },
+  beforeDestroy() {
+    // 清除定时器，防止内存泄漏
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   },
   methods: {
     openStoryDialog() {
       this.storyDialogVisible = true;
     },
     sendStoryToAssistant(prompt) {
-      // 检查 storyDialog 的引用是否存在，并且是否具有 sendMessage 方法
       if (this.$refs.storyDialog && typeof this.$refs.storyDialog.sendMessage === 'function') {
-        this.storyDialogVisible = true; // 显示讲故事对话框
-        this.$refs.storyDialog.sendMessage(prompt); // 调用 sendMessage 方法发送消息
+        this.storyDialogVisible = true;
+        this.$refs.storyDialog.sendMessage(prompt);
       } else {
         console.error("无法找到 AIAssistantForStoryDialog 组件或 sendMessage 方法未定义。");
       }
     },
-    // handleAddToGossip(location) {
-    //   this.gossipLocation = location; // 接收来自 ArchitectureDialog 的建筑名称
-    // },
     handleAddToGossip({ field, value }) {
       if (field === 'location') {
         this.gossipLocation = value;
@@ -170,7 +186,7 @@ export default {
       }
     },
     handleSelectPeriod(period) {
-      this.selectedPeriod = period; // 接收来自 YearSlider 的时期名称
+      this.selectedPeriod = period;
     },
     initEcharts() {
       axios.get('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/data.json')
@@ -182,20 +198,37 @@ export default {
         });
     },
     renderEcharts(data) {
+      console.log('Rendering ECharts...');
       var chartDom = this.$refs.echarts;
       var myChart = echarts.init(chartDom);
       var nameMap = '地图数据';
       var mapData = [];
+
       echarts.registerMap(nameMap, data);
       myChart.showLoading();
       var mapFeatures = echarts.getMap(nameMap).geoJson.features;
       myChart.hideLoading();
+
+      const randomIndex = Math.floor(Math.random() * mapFeatures.length);
+      const randomRegion = mapFeatures[randomIndex].properties.name;
+
       mapFeatures.forEach(function (v, index) {
+        const regionName = v.properties.name;
+        let color = "rgba(0, 101, 163, 0.6)";
+
+        if (regionName === randomRegion) {
+          color = "rgba(255,80,100,0.9)";
+        }
+
         mapData.push({
-          name: v.properties.name,
-          value: Math.random() * 100
+          name: regionName,
+          value: Math.random() * 100,
+          itemStyle: {
+            color: color
+          }
         });
       });
+
       var optionMap = {
         backgroundColor: 'rgba(0,0,0,0)',
         toolbox: {
@@ -208,56 +241,15 @@ export default {
             }
           }
         },
-        geo3D: {
-          map: nameMap,
-          itemStyle: {
-            color: "rgba(0, 101, 163, 0.7)",
-            opacity: 0.8,
-            borderColor: "rgba(255, 255, 255, 1)",
-            borderWidth: 1
-          },
-          roam: true,
-          label: {
-            show: false,
-            textStyle: {
-              color: '#fff',
-              fontSize: 16,
-              opacity: 1,
-              backgroundColor: 'rgba(0,0,0,0)'
-            }
-          },
-          emphasis: {
-            label: {
-              show: true,
-              textStyle: {
-                color: '#ffeb3b',
-                fontSize: 16,
-                backgroundColor: 'rgba(0,23,11,0)'
-              }
-            },
-            itemStyle: {
-              color: "#ff7f50",
-              opacity: 1
-            }
-          },
-          light: {
-            main: {
-              color: '#fff',
-              intensity: 1.2,
-              alpha: 55,
-              beta: 10
-            },
-            ambient: {
-              intensity: 0.3
-            }
-          }
-        },
         series: [{
           type: 'map3D',
           map: nameMap,
+          data: mapData,
           itemStyle: {
-            color: "rgba(0, 101, 163, 0.7)",
-            opacity: 0.8,
+            color: function (params) {
+              return params.data.itemStyle.color;
+            },
+            opacity: 1,
             borderColor: "rgba(255, 255, 255, 1)",
             borderWidth: 1
           },
@@ -269,17 +261,53 @@ export default {
               show: true
             },
             itemStyle: {
-              color: "#ff7f50",
-              opacity: 1
+              color: "rgba(255, 127, 80, 0.9)",
+              opacity: 0.9
             }
           },
-          zlevel: 1
+          zlevel: 1,
+          viewControl: {			// 用于鼠标的旋转，缩放等视角控制。
+            projection: 'perspective',		// 投影方式，默认为透视投影'perspective'，也支持设置为正交投影'orthographic'。
+            autoRotate: false,				// 是否开启视角绕物体的自动旋转查看。[ default: false ]
+            autoRotateDirection: 'cw',		// 物体自传的方向。默认是 'cw' 也就是从上往下看是顺时针方向，也可以取 'ccw'，既从上往下看为逆时针方向。
+            autoRotateSpeed: 10,			// 物体自传的速度。单位为角度 / 秒，默认为10 ，也就是36秒转一圈。
+            autoRotateAfterStill: 3,		// 在鼠标静止操作后恢复自动旋转的时间间隔。在开启 autoRotate 后有效。[ default: 3 ]
+            damping: 0,						// 鼠标进行旋转，缩放等操作时的迟滞因子，在大于等于 1 的时候鼠标在停止操作后，视角仍会因为一定的惯性继续运动（旋转和缩放）。[ default: 0.8 ]
+            rotateSensitivity: 1,			// 旋转操作的灵敏度，值越大越灵敏。支持使用数组分别设置横向和纵向的旋转灵敏度。默认为1, 设置为0后无法旋转。	rotateSensitivity: [1, 0]——只能横向旋转； rotateSensitivity: [0, 1]——只能纵向旋转。
+            zoomSensitivity: 1,				// 缩放操作的灵敏度，值越大越灵敏。默认为1,设置为0后无法缩放。
+            panSensitivity: 1,				// 平移操作的灵敏度，值越大越灵敏。默认为1,设置为0后无法平移。支持使用数组分别设置横向和纵向的平移灵敏度
+            panMouseButton: 'left',			// 平移操作使用的鼠标按键，支持：'left' 鼠标左键（默认）;'middle' 鼠标中键 ;'right' 鼠标右键(注意：如果设置为鼠标右键则会阻止默认的右键菜单。)
+            rotateMouseButton: 'left',		// 旋转操作使用的鼠标按键，支持：'left' 鼠标左键;'middle' 鼠标中键（默认）;'right' 鼠标右键(注意：如果设置为鼠标右键则会阻止默认的右键菜单。)
+
+            distance: 150,					// [ default: 100 ] 默认视角距离主体的距离，对于 grid3D 和 geo3D 等其它组件来说是距离中心原点的距离,对于 globe 来说是距离地球表面的距离。在 projection 为'perspective'的时候有效。
+            minDistance: 40,				// [ default: 40 ] 视角通过鼠标控制能拉近到主体的最小距离。在 projection 为'perspective'的时候有效。
+            maxDistance: 400,				// [ default: 400 ] 视角通过鼠标控制能拉远到主体的最大距离。在 projection 为'perspective'的时候有效。
+
+            alpha: 40, 						// 视角绕 x 轴，即上下旋转的角度。配合 beta 可以控制视角的方向。[ default: 40 ]
+            beta: 15,						// 视角绕 y 轴，即左右旋转的角度。[ default: 0 ]
+            minAlpha: -360,					// 上下旋转的最小 alpha 值。即视角能旋转到达最上面的角度。[ default: 5 ]
+            maxAlpha: 360,					// 上下旋转的最大 alpha 值。即视角能旋转到达最下面的角度。[ default: 90 ]
+            minBeta: -360,					// 左右旋转的最小 beta 值。即视角能旋转到达最左的角度。[ default: -80 ]
+            maxBeta: 360,					// 左右旋转的最大 beta 值。即视角能旋转到达最右的角度。[ default: 80 ]
+
+            center: [0,0,0],				// 视角中心点，旋转也会围绕这个中心点旋转，默认为[0,0,0]。
+
+            animation: true,				// 是否开启动画。[ default: true ]
+            animationDurationUpdate: 1000,	// 过渡动画的时长。[ default: 1000 ]
+            animationEasingUpdate: 'cubicInOut'		// 过渡动画的缓动效果。[ default: cubicInOut ]
+          }
         }]
       };
+      this.displayRegionName = randomRegion;
+      this.displayVisible = true;
+      setTimeout(() => {
+        this.displayVisible = false;
+      }, 3000); // 展示牌显示5秒钟后消失
+
       myChart.setOption(optionMap);
 
       myChart.on('click', params => {
-        if (params.componentType === 'geo3D' || params.componentType === 'series') {
+        if (params.componentType === 'series') {
           axios.get(config.tongyiUrl + `api/architecture?freetext=${params.name}`)
             .then(resp => {
               if (resp.data.result === "0" || resp.data.result === "1") {
@@ -296,13 +324,14 @@ export default {
       });
 
       myChart.on('mousemove', params => {
-        if (params.componentType === 'geo3D' || params.componentType === 'series') {
+        if (params.componentType === 'series') {
           this.currentRegionName = params.name;
         } else {
           this.currentRegionName = '';
         }
       });
     },
+
     fetchEvents(regionName) {
       this.eventList = [];
       axios.get(config.tongyiUrl + `api/eventListByText?eventFreeText=${regionName}`)
@@ -359,10 +388,9 @@ export default {
       this.aiDialogVisible = true;
     },
     sendMessageToAIAssistant(message) {
-      // 检查 aiDialog 的引用是否存在，并且是否具有 sendMessage 方法
       if (this.$refs.aiDialog && typeof this.$refs.aiDialog.sendMessage === 'function') {
-        this.aiDialogVisible = true; // 显示 AI 助手对话框
-        this.$refs.aiDialog.sendMessage(message); // 调用 sendMessage 方法发送消息
+        this.aiDialogVisible = true;
+        this.$refs.aiDialog.sendMessage(message);
       } else {
         console.error("无法找到 AIAssistantDialog 组件或 sendMessage 方法未定义。");
       }
@@ -397,7 +425,7 @@ export default {
 .echarts {
   width: 100%;
   height: 100%;
-  background: url('../../assets/img/shangtu-bg.png') no-repeat center center;
+  background: url('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E4%B8%8A%E5%9B%BE.jpg') no-repeat center center;
   background-size: cover;
   position: fixed;
 }
@@ -441,4 +469,5 @@ export default {
 .history-gossip-button:hover {
   background-color: rgba(173, 216, 230, 0.9); /* 悬停时加深背景色 */
 }
+
 </style>
