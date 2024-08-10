@@ -104,7 +104,7 @@ import AIAssistantForStoryDialog from './AIAssistantForStoryDialog.vue';
 import config from "@/config";
 import LabLogo from './LabLogo.vue';  // 引入LabLogo组件
 import RegionDisplay from './RegionDisplay.vue';  // 引入RegionDisplay组件
-
+import debounce from 'lodash/debounce';
 export default {
   components: {
     YearSlider,
@@ -123,6 +123,7 @@ export default {
   },
   data() {
     return {
+      myChart: null,  // 在 data 中定义 myChart
       selectedYear: 1800,
       selectedPeriod: '',
       gossipLocation: '',
@@ -156,7 +157,7 @@ export default {
     // 每3秒刷新一次高亮地点
     this.refreshInterval = setInterval(() => {
       this.initEcharts();
-    }, 4000);
+    }, 16000);
   },
   beforeDestroy() {
     // 清除定时器，防止内存泄漏
@@ -165,6 +166,10 @@ export default {
     }
   },
   methods: {
+    handleMouseMove: debounce(function(event) {
+      // 处理鼠标移动的逻辑
+      this.currentRegionName = event.name;
+    }, 150), // 100毫秒的防抖时间
     openStoryDialog() {
       this.storyDialogVisible = true;
     },
@@ -198,16 +203,22 @@ export default {
         });
     },
     renderEcharts(data) {
-      console.log('Rendering ECharts...');
+      // 检查是否已经存在一个 myChart 实例
+      if (this.myChart) {
+        this.myChart.dispose();  // 销毁已有的图表实例
+      }
+
+      // 获取图表 DOM 容器
       var chartDom = this.$refs.echarts;
-      var myChart = echarts.init(chartDom);
+      // 重新初始化 echarts 实例，并存储到 this.myChart
+      this.myChart = echarts.init(chartDom);  // 这里确保 myChart 是通过 this 引用的
       var nameMap = '地图数据';
       var mapData = [];
 
       echarts.registerMap(nameMap, data);
-      myChart.showLoading();
+      this.myChart.showLoading();
       var mapFeatures = echarts.getMap(nameMap).geoJson.features;
-      myChart.hideLoading();
+      this.myChart.hideLoading();
 
       const randomIndex = Math.floor(Math.random() * mapFeatures.length);
       const randomRegion = mapFeatures[randomIndex].properties.name;
@@ -302,11 +313,11 @@ export default {
       this.displayVisible = true;
       setTimeout(() => {
         this.displayVisible = false;
-      }, 3000); // 展示牌显示5秒钟后消失
+      }, 15000); // 展示牌显示5秒钟后消失
 
-      myChart.setOption(optionMap);
+      this.myChart.setOption(optionMap);
 
-      myChart.on('click', params => {
+      this.myChart.on('click', params => {
         if (params.componentType === 'series') {
           axios.get(config.tongyiUrl + `api/architecture?freetext=${params.name}`)
             .then(resp => {
@@ -323,7 +334,7 @@ export default {
         }
       });
 
-      myChart.on('mousemove', params => {
+      this.myChart.on('mousemove', params => {
         if (params.componentType === 'series') {
           this.currentRegionName = params.name;
         } else {
@@ -332,7 +343,7 @@ export default {
       });
     },
 
-    fetchEvents(regionName) {
+    fetchEvents: debounce(function(regionName) {
       this.eventList = [];
       axios.get(config.tongyiUrl + `api/eventListByText?eventFreeText=${regionName}`)
         .then(resp => {
@@ -353,7 +364,7 @@ export default {
         .catch(error => {
           console.error(error);
         });
-    },
+    }, 300),  // 300 毫秒的防抖延迟
     showEventDetail(uri) {
       axios.get(config.tongyiUrl + `api/eventDetail?uri=${uri}`)
         .then(resp => {
