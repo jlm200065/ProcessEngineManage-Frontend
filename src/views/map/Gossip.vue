@@ -58,11 +58,20 @@
         </div>
       </div>
     </div>
-    <button class="gossip-button" @click="generateStory">嘎讪胡！</button>
+    <!-- 使用图片作为生成故事的触发器 -->
+    <img
+      src="https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%99%B6%E8%AE%AA%E8%83%A1%28%E5%B7%B2%E5%8E%BB%E5%BA%95%29.png"
+      alt="嘎讪胡"
+      class="gossip-image"
+      @click="generateStory"
+    />
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+import config from "@/config";  // 请确保你已经在项目中配置了 config 文件
+
 export default {
   props: {
     selectedPeriod: String,
@@ -72,6 +81,7 @@ export default {
   },
   data() {
     return {
+      lastPrompt: null, // 记录上一次的生成故事的要素组合
       inputLocation: '',
       inputCharacter: '',
       inputOther: '',
@@ -143,16 +153,32 @@ export default {
         this.$message.warning('该要素已存在');
       }
     },
-    generateStory() {
-      const period = this.selectedPeriod ? `在${this.selectedPeriod}` : '';
-      const locationStr = this.locations.length > 0 ? `地点可以包括${this.locations.join('、')}` : '';
-      const charactersStr = this.characters.length > 0 ? `人物可以以${this.characters.join('、')}为原型` : '';
-      const othersStr = this.others.length > 0 ? `其他要素包括${this.others.join('、')}` : '';
-      const storyTypesStr = this.selectedTypes.length > 0 ? `${this.selectedTypes.join('和')}的故事` : '故事';
+    async generateStory() {
+      const period = this.selectedPeriod ? `时间：${this.selectedPeriod}` : '';
+      const locationStr = this.locations.length > 0 ? `地点：${this.locations.join('、')}` : '';
+      const charactersStr = this.characters.length > 0 ? `人物：${this.characters.join('、')}` : '';
+      const othersStr = this.others.length > 0 ? `其他要素：${this.others.join('、')}` : '';
+      const storyTypesStr = this.selectedTypes.length > 0 ? `类型：${this.selectedTypes.join('和')}` : '';
 
-      const prompt = `请你讲一个${storyTypesStr}，${period}，${locationStr}，${charactersStr}，${othersStr}。`.replace(/，+/g, '，').replace(/，$/, '');
+      const keywords = [period, locationStr, charactersStr, othersStr, storyTypesStr].filter(Boolean).join(', ');
+      if(keywords === this.lastPrompt){
+        this.$emit('just-open-story');
+        return ;
+      }
+      this.lastPrompt = keywords
 
-      this.$emit('generate-story', prompt);
+      try {
+        const response = await axios.post(config.tongyiUrl + 'api/rag', {
+          appId: "0580cb8b5e564b7ca0e53958131da205",
+          prompt: keywords
+        });
+
+        const questionForStory = response.data.data;
+
+        this.$emit('generate-story', questionForStory);
+      } catch (error) {
+        console.error("Error generating story:", error);
+      }
     },
     removeLocation(index) {
       this.locations.splice(index, 1);
@@ -180,7 +206,7 @@ export default {
 .gossip-container {
   position: fixed;
   left: 10px;
-  top: 150px;
+  top: 100px;
   width: 300px;
   background-color: rgba(0, 0, 0, 0.5);
   padding: 10px;
@@ -200,7 +226,7 @@ export default {
 
 .input-with-button {
   display: flex;
-  align-items: center;
+  align-items:center;
 }
 
 .input-with-button input {
@@ -239,7 +265,7 @@ export default {
 }
 
 .remove-location, .remove-character, .remove-other {
-  position: absolute;
+  position:absolute;
   top: 2px;
   right: 5px;
   cursor: pointer;
@@ -266,17 +292,17 @@ export default {
   border-color: #2196f3;
 }
 
-.gossip-button {
-  width: 100%;
-  padding: 8px;
-  background-color: #2196f3;
-  border: none;
-  border-radius: 5px;
-  color: white;
+.gossip-image {
+  display: block;
+  width: 50%;
   cursor: pointer;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+  margin-left: 25%; /* 将图片向右移动25% */
 }
 
-.gossip-button:hover {
-  background-color: #1976d2;
+.gossip-image:hover {
+  opacity: 0.8;
+  box-shadow: 0 0 8px 2px rgba(33, 150, 243, 0.8); /* 蓝色光晕效果 */
 }
+
 </style>

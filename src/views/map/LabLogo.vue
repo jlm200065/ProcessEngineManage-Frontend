@@ -27,9 +27,9 @@ export default {
     return {
       carouselVisible: false,
       images: [
-        "https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%AE%9E%E9%AA%8C%E5%AE%A4%E7%AE%80%E4%BB%8B1.png",
-        "https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%AE%9E%E9%AA%8C%E5%AE%A4%E7%AE%80%E4%BB%8B2.png",
-        "https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%AE%9E%E9%AA%8C%E5%AE%A4%E7%AE%80%E4%BB%8B3.png"
+        "https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%AE%9E%E9%AA%8C%E5%AE%A4%E7%AE%80%E4%BB%8B1%EF%BC%88%E6%97%A0%E8%81%94%E7%B3%BB.png",
+        // "https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%AE%9E%E9%AA%8C%E5%AE%A4%E7%AE%80%E4%BB%8B2.png",
+        // "https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E5%AE%9E%E9%AA%8C%E5%AE%A4%E7%AE%80%E4%BB%8B3.png"
       ]
     };
   },

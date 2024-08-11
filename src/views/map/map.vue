@@ -1,5 +1,10 @@
 <template>
   <div>
+
+    <!-- 应用的标题图片 -->
+    <img src="https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E4%B8%8A%E6%B5%B7%E4%B8%87%E8%B1%A1logo%28%E5%B7%B2%E5%8E%BB%E5%BA%95%29.png" alt="上海万象Logo" class="app-logo">
+
+
     <!-- 显示当前鼠标放置的地区名称 -->
     <div class="region-name" v-if="currentRegionName">
       {{ currentRegionName }}
@@ -20,14 +25,16 @@
     <!-- 电视机样式的视频弹窗 -->
     <TVFrame :visible.sync="videoVisible" />
 
-    <!-- AI助手图标 -->
-    <AIAssistant @show-dialog="showAIDialog" />
+<!--    &lt;!&ndash; AI助手图标 &ndash;&gt;-->
+<!--    <AIAssistant @show-dialog="showAIDialog" />-->
+    <!-- AI助手图标  现在是打开历史噶讪胡-->
+    <AIAssistant @show-dialog="openStoryDialog" />
 
     <!-- AI助手对话框 -->
     <AIAssistantDialog ref="aiDialog" :visible.sync="aiDialogVisible" />
 
     <!-- 展示牌组件 -->
-    <RegionDisplay :regionName="displayRegionName" :visible="displayVisible" />
+    <RegionDisplay :regionName="displayRegionName" :visible="displayVisible"  @add-to-gossip="handleAddToGossip"/>
     <!-- 建筑弹窗 -->
     <ArchitectureDialog
       :dialogTitle="dialogTitle"
@@ -76,12 +83,10 @@
       :character="gossipCharacter"
       :other="gossipOther"
       @generate-story="sendStoryToAssistant"
+      @just-open-story="justOpenStoryDialog"
     />
     <!-- 监听 generate-story 事件 -->
 
-
-    <!-- 历史Gossip按钮 -->
-    <button class="history-gossip-button" @click="openStoryDialog">历史Gossip</button>
   </div>
 </template>
 
@@ -124,6 +129,7 @@ export default {
   data() {
     return {
       myChart: null,  // 在 data 中定义 myChart
+      mapData: null, // 存储地图数据
       selectedYear: 1800,
       selectedPeriod: '',
       gossipLocation: '',
@@ -152,7 +158,17 @@ export default {
     };
   },
   mounted() {
-    this.initEcharts();
+
+    // 只在页面加载时请求一次地图数据
+    axios.get('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/data.json')
+      .then(resp => {
+        this.mapData = resp.data;
+        this.initEcharts();
+      })
+      .catch(error => {
+        console.error(error);
+      });
+
 
     // 每3秒刷新一次高亮地点
     this.refreshInterval = setInterval(() => {
@@ -166,10 +182,10 @@ export default {
     }
   },
   methods: {
-    handleMouseMove: debounce(function(event) {
-      // 处理鼠标移动的逻辑
-      this.currentRegionName = event.name;
-    }, 150), // 100毫秒的防抖时间
+    // handleMouseMove: debounce(function(event) {
+    //   // 处理鼠标移动的逻辑
+    //   this.currentRegionName = event.name;
+    // }, 150), // 100毫秒的防抖时间
     openStoryDialog() {
       this.storyDialogVisible = true;
     },
@@ -180,6 +196,9 @@ export default {
       } else {
         console.error("无法找到 AIAssistantForStoryDialog 组件或 sendMessage 方法未定义。");
       }
+    },
+    justOpenStoryDialog(){
+      this.storyDialogVisible = true;
     },
     handleAddToGossip({ field, value }) {
       if (field === 'location') {
@@ -194,13 +213,10 @@ export default {
       this.selectedPeriod = period;
     },
     initEcharts() {
-      axios.get('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/data.json')
-        .then(resp => {
-          this.renderEcharts(resp.data);
-        })
-        .catch(error => {
-          console.error(error);
-        });
+      // 只需使用已获取的 mapData
+      if (!this.mapData) return;
+
+      this.renderEcharts(this.mapData);
     },
     renderEcharts(data) {
       // 检查是否已经存在一个 myChart 实例
@@ -213,7 +229,7 @@ export default {
       // 重新初始化 echarts 实例，并存储到 this.myChart
       this.myChart = echarts.init(chartDom);  // 这里确保 myChart 是通过 this 引用的
       var nameMap = '地图数据';
-      var mapData = [];
+      const mapData = [];
 
       echarts.registerMap(nameMap, data);
       this.myChart.showLoading();
@@ -284,9 +300,9 @@ export default {
             autoRotateSpeed: 10,			// 物体自传的速度。单位为角度 / 秒，默认为10 ，也就是36秒转一圈。
             autoRotateAfterStill: 3,		// 在鼠标静止操作后恢复自动旋转的时间间隔。在开启 autoRotate 后有效。[ default: 3 ]
             damping: 0,						// 鼠标进行旋转，缩放等操作时的迟滞因子，在大于等于 1 的时候鼠标在停止操作后，视角仍会因为一定的惯性继续运动（旋转和缩放）。[ default: 0.8 ]
-            rotateSensitivity: 1,			// 旋转操作的灵敏度，值越大越灵敏。支持使用数组分别设置横向和纵向的旋转灵敏度。默认为1, 设置为0后无法旋转。	rotateSensitivity: [1, 0]——只能横向旋转； rotateSensitivity: [0, 1]——只能纵向旋转。
-            zoomSensitivity: 1,				// 缩放操作的灵敏度，值越大越灵敏。默认为1,设置为0后无法缩放。
-            panSensitivity: 1,				// 平移操作的灵敏度，值越大越灵敏。默认为1,设置为0后无法平移。支持使用数组分别设置横向和纵向的平移灵敏度
+            // rotateSensitivity: 1,			// 旋转操作的灵敏度，值越大越灵敏。支持使用数组分别设置横向和纵向的旋转灵敏度。默认为1, 设置为0后无法旋转。	rotateSensitivity: [1, 0]——只能横向旋转； rotateSensitivity: [0, 1]——只能纵向旋转。
+            // zoomSensitivity: 1,				// 缩放操作的灵敏度，值越大越灵敏。默认为1,设置为0后无法缩放。
+            // panSensitivity: 1,				// 平移操作的灵敏度，值越大越灵敏。默认为1,设置为0后无法平移。支持使用数组分别设置横向和纵向的平移灵敏度
             panMouseButton: 'left',			// 平移操作使用的鼠标按键，支持：'left' 鼠标左键（默认）;'middle' 鼠标中键 ;'right' 鼠标右键(注意：如果设置为鼠标右键则会阻止默认的右键菜单。)
             rotateMouseButton: 'left',		// 旋转操作使用的鼠标按键，支持：'left' 鼠标左键;'middle' 鼠标中键（默认）;'right' 鼠标右键(注意：如果设置为鼠标右键则会阻止默认的右键菜单。)
 
@@ -436,7 +452,7 @@ export default {
 .echarts {
   width: 100%;
   height: 100%;
-  background: url('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E4%B8%8A%E5%9B%BE.jpg') no-repeat center center;
+  background: url('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E4%B8%87%E8%B1%A1%E4%B8%8A%E6%B5%B73.png') no-repeat center center;
   background-size: cover;
   position: fixed;
 }
@@ -454,31 +470,22 @@ export default {
 
 .region-name {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: 90%;
+  left: 50%;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  padding: 20px 40px; /* 调整 padding 使其更大 */
+  padding: 10px 20px; /* 调整 padding 使其更大 */
   border-radius: 5px;
   z-index: 1000;
-  font-size: 30px; /* 调整字体大小 */
+  font-size: 20px; /* 调整字体大小 */
 }
-.history-gossip-button {
+
+.app-logo {
   position: fixed;
-  top: 105px;  /* 调整顶部的距离 */
-  left: 20px; /* 调整左侧的距离 */
-  padding: 10px 20px;
-  background-color: rgba(173, 216, 230, 0.7); /* 淡蓝色透明背景 */
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  z-index: 1000; /* 提升按钮的层级 */
+  top: -15px;
+  left: 20px;
+  width: 250px; /* 可根据需要调整图片大小 */
+  height: auto;
+  z-index: 1001; /* 确保在最上层 */
 }
-
-.history-gossip-button:hover {
-  background-color: rgba(173, 216, 230, 0.9); /* 悬停时加深背景色 */
-}
-
 </style>
