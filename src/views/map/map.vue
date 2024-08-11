@@ -329,7 +329,7 @@ export default {
       this.displayVisible = true;
       setTimeout(() => {
         this.displayVisible = false;
-      }, 15000); // 展示牌显示5秒钟后消失
+      }, 16000); // 展示牌显示5秒钟后消失
 
       this.myChart.setOption(optionMap);
 
