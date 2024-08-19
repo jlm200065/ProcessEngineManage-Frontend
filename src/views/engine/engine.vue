@@ -4,8 +4,8 @@
     <div class="board">
       <el-breadcrumb separator-class="el-icon-arrow-right">
         <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item>Engine管理</el-breadcrumb-item>
-        <el-breadcrumb-item>Engine信息管理</el-breadcrumb-item>
+        <el-breadcrumb-item>Engine</el-breadcrumb-item>
+        <el-breadcrumb-item>Engine Manage</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
@@ -23,26 +23,26 @@
           <el-input placeholder="请输入URL" v-model="inputUrl" clearable />
         </el-col>
         <el-col :span="4">
-          <el-button icon="el-icon-search" @click="getEngineList">搜索</el-button>
+          <el-button icon="el-icon-search" @click="getEngineList">Query</el-button>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary" @click="showAddDialog">添加Engine</el-button>
+          <el-button type="primary" @click="showAddDialog">Add Engine</el-button>
         </el-col>
         <el-col :span="4">
-          <el-button type="danger" @click="multipleDelete">批量删除</el-button>
+          <el-button type="danger" @click="multipleDelete">Batch Delete</el-button>
         </el-col>
       </el-row>
 
       <el-table :data="engineList" style="width: 100%" border stripe @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="40"></el-table-column>
 
-        <el-table-column label="引擎类型" width="170px">
+        <el-table-column label="type" width="170px">
           <template slot-scope="scope">
             <img :src="getEngineTypeImage(scope.row.engineType)" :alt="scope.row.engineType" class="engine-type-image"/>
             <span>{{ scope.row.engineType }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="名称">
+        <el-table-column prop="name" label="name">
           <template slot-scope="scope">
             <el-tag style="background-color: rgba(64, 158, 255, 0.1); border-color: #409EFF; color: #409EFF;">
               {{ scope.row.name }}
@@ -51,10 +51,10 @@
         </el-table-column>
 
         <el-table-column prop="url" label="URL" width="260px"></el-table-column>
-        <el-table-column prop="status" label="状态" width="80px">
+        <el-table-column prop="status" label="state" width="80px">
           <template slot-scope="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '在线' : '离线' }}
+              {{ scope.row.status === 1 ? 'online' : 'offline' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -67,7 +67,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180">
+        <el-table-column label="Operate" width="180">
           <template slot-scope="scope">
             <el-tooltip effect="dark" content="修改Engine信息" placement="top" :enterable="false" :open-delay="500">
               <el-button type="primary" icon="el-icon-edit" size="mini"
