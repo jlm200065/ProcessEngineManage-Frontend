@@ -9,7 +9,7 @@
       </el-breadcrumb>
     </div>
 
-    <!--卡片视图-->
+    <!--操作按钮区域-->
     <el-card class="box-card">
       <el-row :gutter="20">
         <el-col :span="4">
@@ -23,12 +23,14 @@
           <el-button type="primary" @click="combineSelectedProcesses">合并</el-button>
         </el-col>
 
-
         <el-col :span="4">
           <el-button type="primary" @click="showAddDialog">添加Process</el-button>
         </el-col>
         <el-col :span="4">
           <el-button type="danger" @click="multipleDelete">批量删除</el-button>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="info" @click="discoverSupplyChain">发现供应链</el-button>
         </el-col>
       </el-row>
 
@@ -140,6 +142,19 @@
   </span>
     </el-dialog>
 
+    <!--发现供应链对话框-->
+    <el-dialog title="发现供应链" :visible.sync="discoverDialogVisible" width="60%">
+      <el-row :gutter="20" v-for="(collaboration, index) in collaborations" :key="index">
+        <el-col :span="24">
+          <el-button type="info" @click="selectCollaboration(collaboration)" block>
+            协作 {{ index + 1 }}
+          </el-button>
+        </el-col>
+      </el-row>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="discoverDialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -191,6 +206,8 @@ export default {
       viewer: null,
       bpmnModeler: null,
       bpmnXml: '',
+      discoverDialogVisible: false,
+      collaborations: []
     };
   },
   created() {
@@ -285,7 +302,7 @@ export default {
     },
     multipleDelete() {
       const ids = this.multipleSelection.map(item => item.id);
-      axios.delete('/process/delete', { data: ids }).then(() => {
+      axios.delete('/process/delete', {data: ids}).then(() => {
         this.getProcessList();
       }).catch(error => {
         console.error(error);
@@ -334,7 +351,7 @@ export default {
           container: '#bpmnCanvas'
         });
       }
-      console.log('纳尼456？!',xmlStr);
+      console.log('纳尼456？!', xmlStr);
       try {
         this.bpmnModeler.importXML(bpmnContent, (err) => {
           if (!err) {
@@ -357,7 +374,31 @@ export default {
 
       });
     },
-
+    discoverSupplyChain() {
+      axios.get('http://localhost:8182/process/getAllCombination')
+        .then(response => {
+          console.log("discoverSupplyChain", response)
+          this.collaborations = response.data.data;
+          this.discoverDialogVisible = true;
+        })
+        .catch(error => {
+          console.error('Error fetching supply chain:', error);
+          this.$message.error('发现供应链过程中出现错误');
+        });
+    },
+    selectCollaboration(collaboration) {
+      const participants = collaboration.map(item => item.participant);
+      axios.post('http://localhost:8182/process/getCombineProcess', participants)
+        .then(response => {
+          console.log("selectCollaboration", response)
+          this.processList = response.data.data;
+          this.discoverDialogVisible = false;
+        })
+        .catch(error => {
+          console.error('Error combining processes:', error);
+          this.$message.error('组合协作过程中出现错误');
+        });
+    }
   }
 }
 </script>
@@ -383,5 +424,9 @@ export default {
   width: 90%;
   height: 500px;
   border: 1px solid #ccc;
+}
+
+.dialog-footer .el-button {
+  margin: 0 10px;
 }
 </style>
