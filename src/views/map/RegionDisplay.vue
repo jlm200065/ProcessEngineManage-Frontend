@@ -93,10 +93,9 @@ export default {
           const videoPlayer = this.$refs.videoPlayer;
           videoPlayer.load();
           videoPlayer.onloadedmetadata = () => {
-            const randomStartTime = Math.random() * videoPlayer.duration;
-            videoPlayer.currentTime = randomStartTime;
+            const startTime = Math.min(60, videoPlayer.duration);  // 如果视频长度小于60秒，则从视频结束前开始播放
+            videoPlayer.currentTime = startTime;
           };
-          videoPlayer.play();
         });
       }
     },
