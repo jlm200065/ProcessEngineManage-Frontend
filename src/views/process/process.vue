@@ -11,26 +11,26 @@
 
     <!--操作按钮区域-->
     <el-card class="box-card">
-      <el-row :gutter="20">
-        <el-col :span="4">
+      <el-row :gutter="10">
+        <el-col :span="3">
           <el-input placeholder="请输入名称" v-model="inputName" clearable />
         </el-col>
-        <el-col :span="4">
+        <el-col :span="3">
           <el-button icon="el-icon-search" @click="getProcessList">搜索</el-button>
         </el-col>
 
-        <el-col :span="4">
+        <el-col :span="3">
           <el-button type="primary" @click="combineSelectedProcesses">合并</el-button>
         </el-col>
 
-        <el-col :span="4">
+        <el-col :span="3">
           <el-button type="primary" @click="showAddDialog">添加Process</el-button>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="3">
           <el-button type="danger" @click="multipleDelete">批量删除</el-button>
         </el-col>
-        <el-col :span="4">
-          <el-button type="info" @click="discoverSupplyChain">发现供应链</el-button>
+        <el-col :span="3">
+          <el-button type="success" @click="discoverSupplyChain">发现供应链</el-button>
         </el-col>
       </el-row>
 
@@ -41,11 +41,12 @@
         <el-table-column prop="origin" label="上传者" width="150px"></el-table-column>
         <el-table-column prop="engineCategory" label="引擎类型" width="100px"></el-table-column>
 
-        <el-table-column label="操作" width="340">
+        <el-table-column label="操作" width="420">
           <template slot-scope="scope">
             <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)">编辑</el-button>
             <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteProcessById(scope.row.id)">删除</el-button>
             <el-button type="success" icon="el-icon-view" size="mini" @click="showViewDialog(scope.row)">查看</el-button>
+            <el-button type="warning" icon="el-icon-upload" size="mini" @click="deployProcess(scope.row)">部署</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -146,7 +147,7 @@
     <el-dialog title="发现供应链" :visible.sync="discoverDialogVisible" width="60%">
       <el-row :gutter="20" v-for="(collaboration, index) in collaborations" :key="index">
         <el-col :span="24">
-          <el-button type="info" @click="selectCollaboration(collaboration)" block>
+          <el-button style="width: 700px" type="success" @click="selectCollaboration(collaboration)" block>
             协作 {{ index + 1 }}
           </el-button>
         </el-col>
@@ -155,6 +156,37 @@
         <el-button @click="discoverDialogVisible = false">关闭</el-button>
       </span>
     </el-dialog>
+
+
+
+    <!-- 部署结果展示 -->
+    <el-dialog title="部署结果" :visible.sync="deployResultVisible" width="70%">
+      <el-row :gutter="20">
+        <el-col :span="24" v-for="(item, index) in deployResult" :key="index">
+          <el-card @click.native="handleCardClick(item)">
+            <h3>{{ item.name }}</h3>
+            <p><strong>引擎类型: </strong>{{ item.engineType }}</p>
+            <p><strong>URL: </strong>{{ item.url }}</p>
+            <p><strong>消息队列: </strong>{{ item.pubSubName }} ({{ item.pubSubUrl }})</p>
+            <div>
+              <strong>主题: </strong>
+              <el-tag
+                v-for="(topic, index) in item.topics"
+                :key="index"
+                type="primary"
+                size="small"
+                style="margin-right: 5px;">
+                {{ topic.topic }}
+              </el-tag>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="deployResultVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -207,7 +239,9 @@ export default {
       bpmnModeler: null,
       bpmnXml: '',
       discoverDialogVisible: false,
-      collaborations: []
+      collaborations: [],
+      deployResultVisible: false,
+      deployResult: []
     };
   },
   created() {
@@ -235,6 +269,9 @@ export default {
           console.error('Error combining processes:', error);
           this.$message.error('合并过程中出现错误');
         });
+    },
+    handleCardClick(item) {
+      this.$message.success(`部署成功: ${item.name}`);
     },
 
     getProcessList() {
@@ -397,6 +434,23 @@ export default {
         .catch(error => {
           console.error('Error combining processes:', error);
           this.$message.error('组合协作过程中出现错误');
+        });
+    },
+    deployProcess(row) {
+      const payload = {
+        engineType: row.engineCategory,
+        url: '',
+        pageNum: 1,
+        pageSize: 100
+      };
+      axios.post('http://localhost:8182/engine/all', payload)
+        .then(response => {
+          this.deployResult = response.data.data.list;
+          this.deployResultVisible = true;
+        })
+        .catch(error => {
+          console.error('Error during deployment:', error);
+          this.$message.error('部署过程中出现错误');
         });
     }
   }
