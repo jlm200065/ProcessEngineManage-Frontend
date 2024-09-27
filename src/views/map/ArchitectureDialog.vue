@@ -1,6 +1,6 @@
 <template>
   <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" @close="closeDialog">
-    <div>
+    <div class="dialog-content">
       <p>著名建筑有：</p>
       <ul>
         <li v-for="item in dialogContent" :key="item.uri" style="display: flex; align-items: center;">
@@ -63,6 +63,30 @@ export default {
 </script>
 
 <style scoped>
+.dialog-content {
+  background-image: url('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E4%B8%8A%E6%B5%B723.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.dialog-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.65); /* 设置透明度 */
+  z-index: 1;
+}
+
+.dialog-content > * {
+  position: relative;
+  z-index: 2; /* 确保内容在背景的上方显示 */
+}
+
 .item-button {
   border: 1px solid #007bff;
   color: #007bff;
@@ -70,8 +94,7 @@ export default {
   margin: 5px 0;
   display: inline-block;
   cursor: pointer;
-  position: relative;
-  z-index: 10; /* 确保按钮位于上层 */
+  z-index: 2;
 }
 
 .item-button:hover {
@@ -81,18 +104,18 @@ export default {
 
 .gossip-button {
   margin-left: 10px;
-  font-size: 12px; /* 更小的字体 */
-  background-color: rgba(70, 130, 180, 0.3); /* 淡蓝色半透明背景 */
-  color: #4682b4; /* 淡蓝色字体 */
-  padding: 3px 8px; /* 调整按钮大小 */
+  font-size: 12px;
+  background-color: rgba(70, 130, 180, 0.3);
+  color: #4682b4;
+  padding: 3px 8px;
   border: none;
-  border-radius: 3px; /* 添加圆角 */
+  border-radius: 3px;
   cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease; /* 添加过渡效果 */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .gossip-button:hover {
-  background-color: rgba(70, 130, 180, 0.6); /* 鼠标悬停时背景颜色变深 */
-  color: #ffffff; /* 鼠标悬停时字体变为白色 */
+  background-color: rgba(70, 130, 180, 0.6);
+  color: #ffffff;
 }
 </style>

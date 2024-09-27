@@ -1,6 +1,6 @@
 <template>
   <el-dialog :title="title" :visible.sync="visible" @close="closeDialog">
-    <div v-if="content">
+    <div v-if="content" class="dialog-content">
       <div class="detail-item">
         <span class="label">日期:</span>
         <span class="value">{{ content.dateLabel }}</span>
@@ -85,6 +85,30 @@ export default {
 </script>
 
 <style scoped>
+.dialog-content {
+  background-image: url('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E6%B0%91%E5%9B%BD%E4%B8%8A%E6%B5%B7.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.dialog-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6); /* 设置透明度 */
+  z-index: 1;
+}
+
+.dialog-content > * {
+  position: relative;
+  z-index: 2; /* 确保内容在背景的上方显示 */
+}
+
 .detail-item {
   margin: 10px 0;
   padding: 10px;

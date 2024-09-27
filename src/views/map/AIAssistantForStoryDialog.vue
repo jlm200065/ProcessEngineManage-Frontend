@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" width="85%" @close="closeDialog">
+  <el-dialog :visible.sync="dialogVisible" @close="closeDialog">
     <div class="chat-container">
       <div class="messages-list">
         <div
@@ -12,7 +12,7 @@
             <video controls :src="message.content" width="100%"></video>
           </div>
         </div>
-        <div v-if="isTyping" class="typing-indicator">对方正在输入...</div>
+        <div v-if="isTyping" class="typing-indicator">{{ typingMessage }}</div>
       </div>
       <div class="input-container">
         <el-input
@@ -46,6 +46,15 @@ export default {
       userMessage: '',
       messages: [],
       isTyping: false,
+      typingMessages: [
+        '对方正在输入...',
+        '请稍等片刻...',
+        '正在思考中...',
+        '快好了，请稍后...',
+        '正在整理回复...',
+      ],
+      typingMessage: '',
+      typingInterval: null,
       markdown: new MarkdownIt()
     };
   },
@@ -60,6 +69,15 @@ export default {
   methods: {
     closeDialog() {
       this.dialogVisible = false;
+      clearInterval(this.typingInterval);
+    },
+    startTypingIndicator() {
+      let index = 0;
+      this.typingMessage = this.typingMessages[index];
+      this.typingInterval = setInterval(() => {
+        index = (index + 1) % this.typingMessages.length;
+        this.typingMessage = this.typingMessages[index];
+      }, 2000);
     },
     sendMessage(messageContent = null) {
       if (messageContent instanceof Event) {
@@ -82,6 +100,7 @@ export default {
     },
     async sendToApi(prompt) {
       this.isTyping = true;
+      this.startTypingIndicator();
       try {
         const response = await axios.post(config.tongyiUrl + 'api/rag', {
           appId: "75f8192819964922ba0b41f2c15d762f",
@@ -116,6 +135,7 @@ export default {
       } catch (error) {
         console.error(error);
       } finally {
+        clearInterval(this.typingInterval);
         this.isTyping = false;
         this.scrollToBottom();
       }
@@ -135,7 +155,6 @@ export default {
   }
 };
 </script>
-
 <style scoped>
 .chat-container {
   display: flex;
@@ -153,7 +172,11 @@ export default {
   border-radius: 8px;
   border: none;
 }
-
+.typing-indicator {
+  font-style: italic;
+  color: #888;
+  margin: 5px 0;
+}
 .messages-list {
   flex-grow: 1;
   overflow-y: auto;
