@@ -112,6 +112,9 @@ export default {
         });
     },
     showEventDetail(uri) {
+      console.log('test showEventDetail', uri)
+      window.open(uri, '_blank');
+
       this.$emit('show-event-detail', uri);
     },
     addToGossip(field, value) {

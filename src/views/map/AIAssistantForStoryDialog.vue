@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" @close="closeDialog">
+  <el-dialog :visible.sync="dialogVisible" @close="closeDialog" width="85%">
     <div class="chat-container">
       <div class="messages-list">
         <div
@@ -161,13 +161,13 @@ export default {
   flex-direction: column;
   height: 500px;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1400px;
   background-image: url('https://jlm-1321383016.cos.ap-shanghai.myqcloud.com/map/%E6%B0%91%E5%9B%BD%E4%B8%8A%E6%B5%B7.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
   background-color: rgba(255, 255, 255, 0.3);
-  padding: 20px;
+  padding: 10px;
   box-sizing: border-box;
   border-radius: 8px;
   border: none;
