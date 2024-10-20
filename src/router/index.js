@@ -18,6 +18,10 @@ import Engine from "@/views/engine/engine.vue";
 import Process from "@/views/process/process.vue";
 import Map_sh from "@/views/map/map.vue"
 import Cmb from "@/views/cmb/map.vue"
+import Supermarket from "@/views/cbpmDemo/Supermarket.vue";
+import Supplier from "@/views/cbpmDemo/Supplier.vue";
+import Logistics from "@/views/cbpmDemo/Logistics.vue";
+import SupermarketNeedAlliance from "@/views/cbpmDemo/SupermarketNeedAlliance.vue";
 Vue.use(VueRouter)
 
 const routes = [
@@ -38,6 +42,22 @@ const routes = [
   {
     path: '/cmb',
     component: Cmb
+  },
+  {
+    path: '/superV2',
+    component: SupermarketNeedAlliance
+  },
+  {
+    path: '/supermarket',
+    component: Supermarket
+  },
+  {
+    path: '/supplier',
+    component: Supplier
+  },
+  {
+    path: '/logistics',
+    component: Logistics
   },
   {
     path: '/home',
@@ -64,7 +84,7 @@ const routes = [
 
 const router = new VueRouter({
   routes,
-  mode: 'hash',
+  mode: 'history',
 })
 
 //挂载路由导航守卫
@@ -73,7 +93,9 @@ router.beforeEach((to, from, next) =>{
   //from 从哪个页面来
   //next 一个放行函数
 
-  if(to.path === '/login' || to.path === '/404' || to.path === '/map'  || to.path === '/cmb') return next();
+  if(to.path === '/login' || to.path === '/404' || to.path === '/map'  || to.path === '/cmb'
+    || to.path === '/supermarket' || to.path === '/supplier'|| to.path === '/logistics'
+    || to.path === '/superV2') return next();
 
   //顶部进度条
   NProgress.start()
