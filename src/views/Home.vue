@@ -4,7 +4,7 @@
       <div class="span-container" style="padding: 5px" @click="toWelcome">
         <span>&nbsp;&nbsp;</span>
         <img src="../assets/logo.png" alt="" height="40px" width="40px">
-        <span>跨企业流程协作管理平台</span>
+        <span>异构业务流程引擎可靠协作平台</span>
       </div>
       <el-button type="info" @click="logout">退出</el-button>
     </el-header>
