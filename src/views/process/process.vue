@@ -135,6 +135,7 @@
           </el-upload>
           <el-input v-model="editForm.bpmn" placeholder="BPMN文件内容" type="textarea" rows="10"></el-input>
           <el-button :disabled="!editForm.bpmn" type="primary" @click="showAdaptDialog(editForm.bpmn)">展示改造过程</el-button>
+          <el-button type="primary" @click="findProcessByNameExpectSelf">可替代流程列表</el-button>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -161,24 +162,40 @@
     <el-dialog title="查看BPMN图" :visible.sync="viewDialogVisible" width="70%">
       <div id="bpmnCanvas" class="bpmn-container"></div>
       <span slot="footer" class="dialog-footer">
-    <el-button @click="downloadBpmn">下载</el-button>
-    <el-button @click="viewDialogVisible = false">关闭</el-button>
-  </span>
+        <el-button @click="downloadBpmn">下载</el-button>
+        <el-button @click="viewDialogVisible = false">关闭</el-button>
+      </span>
     </el-dialog>
 
-    <!--发现供应链对话框-->
+    <!-- 发现供应链对话框 -->
     <el-dialog title="发现供应链" :visible.sync="discoverDialogVisible" width="60%">
       <el-row :gutter="20" v-for="(collaboration, index) in collaborations" :key="index">
         <el-col :span="24">
           <el-button style="width: 700px" type="success" @click="selectCollaboration(collaboration)" block>
             协作 {{ index + 1 }} - 成员数: {{ collaboration.length }} - weight 总和: {{ calculateWeightSum(collaboration) }}
           </el-button>
+          <el-button type="primary" @click="showAlternateListDialog(collaboration)" style="margin-top: 10px;">
+            协作优化
+          </el-button>
         </el-col>
       </el-row>
-
       <span slot="footer" class="dialog-footer">
-        <el-button @click="discoverDialogVisible = false">关闭</el-button>
-      </span>
+      <el-button @click="discoverDialogVisible = false">关闭</el-button>
+    </span>
+    </el-dialog>
+
+    <!-- 协作优化的弹窗 -->
+    <el-dialog title="协作优化" :visible.sync="alternateListDialogVisible" width="50%">
+      <el-row :gutter="20" v-for="(alt, altIndex) in selectedAlternateList" :key="altIndex">
+        <el-col :span="24">
+          <el-button style="width: 100%" type="success" @click="selectCollaboration(alt)" block>
+            协作替代 {{ altIndex + 1 }} - 成员数: {{ alt.length }} - weight 总和: {{ calculateWeightSum(alt) }}
+          </el-button>
+        </el-col>
+      </el-row>
+      <span slot="footer" class="dialog-footer">
+      <el-button @click="alternateListDialogVisible = false">关闭</el-button>
+    </span>
     </el-dialog>
 
 
@@ -211,6 +228,30 @@
       </span>
     </el-dialog>
 
+
+
+
+    <!--可替代流程对话框-->
+    <el-dialog title="可替代流程" :visible.sync="alternateDialogVisible" width="60%">
+      <el-row :gutter="20" v-for="(alternate, index) in alternateList" :key="index">
+        <el-col :span="24">
+          <el-button @click="showAlternateViewDialog(alternate)" style="width: 700px" type="warning" block>
+             替代者： {{ alternate.name }} -  权值： {{ alternate.weight }}
+          </el-button>
+        </el-col>
+      </el-row>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="alternateDialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="替代流程预览" :visible.sync="viewAlternateBPMNDialogVisible" width="70%">
+      <div id="bpmnCanvas" class="bpmn-container"></div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="deployProcess(alternate)" type="success">替换</el-button>
+        <el-button @click="viewAlternateBPMNDialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -222,7 +263,9 @@ import config from "@/config";
 export default {
   data() {
     return {
-
+      alternateListDialogVisible: false,
+      selectedAlternateList: [],
+      alternate: undefined,
       adaptDialogVisible: false,
       originalBpmn: '',
       adaptedBpmn: '',
@@ -274,16 +317,83 @@ export default {
       discoverDialogVisible: false,
       collaborations: [],
       deployResultVisible: false,
-      deployResult: []
+      deployResult: [],
+      alternateDialogVisible:false,
+      alternateList: [],
+      viewAlternateBPMNDialogVisible: false
     };
   },
   created() {
     this.getProcessList();
   },
   methods: {
+    showAlternateListDialog(collaboration) {
+      this.selectedAlternateList = collaboration.alternateList;
+      this.alternateListDialogVisible = true;
+    },
+    processCollaborations(data) {
+      const groupedByLength = data.reduce((acc, curr) => {
+        const len = curr.length;
+        if (!acc[len]) acc[len] = [];
+        acc[len].push(curr);
+        return acc;
+      }, {});
+
+      const result = [];
+      Object.values(groupedByLength).forEach(group => {
+        if (group.length > 1) {
+          group.sort((a, b) => this.calculateWeightSum(a) - this.calculateWeightSum(b));
+          const [smallest, ...others] = group;
+          smallest.alternateList = others;
+          smallest.showAlternateList = false;
+          result.push(smallest);
+        } else {
+          group[0].alternateList = [];
+          group[0].showAlternateList = false;
+          result.push(group[0]);
+        }
+      });
+
+      return result;
+    },
+    toggleAlternateList(index) {
+      console.log('toggleAlternateList', this.collaborations[index].alternateList)
+      this.collaborations[index].showAlternateList = !this.collaborations[index].showAlternateList;
+    },
+
+
+
     calculateWeightSum(collaboration) {
       return collaboration.reduce((sum, member) => sum + (member.weight || 0), 0);
     },
+    findProcessByNameExpectSelf(){
+
+      console.log('findProcessByNameExpectSelf', this.editForm)
+      axios.post('/process/alternate', {
+        name: this.editForm.name,
+        id: this.editForm.id
+      })
+        .then(response => {
+          console.log('findProcessByNameExpectSelf response', response)
+          this.alternateList = response.data.data
+          this.alternateDialogVisible = true
+        })
+        // .catch(error => {
+        // });
+    },
+    showAlternateViewDialog(alternate) {
+      this.viewAlternateBPMNDialogVisible = true;
+      this.alternate = alternate
+      console.log('this.alternate', this.alternate)
+      // 延迟展示 BPMN 图，确保对话框和容器已经渲染完成
+      this.$nextTick(() => {
+        this.viewBpmnDiagram(alternate.bpmn);
+      });
+    },
+
+
+
+
     // 省略其他方法
     showAdaptDialog(bpmnContent) {
       console.log('showAdaptDialog')
@@ -525,10 +635,10 @@ export default {
       })
     },
     discoverSupplyChain() {
-      axios.get(config.apiBaseUrl +  'process/getAllCombination')
+      axios.get(config.apiBaseUrl + 'process/getAllCombination')
         .then(response => {
-          console.log("discoverSupplyChain", response.data.data)
-          this.collaborations = this.sortByWeightSum(response.data.data);
+          console.log("discoverSupplyChain", response.data.data);
+          this.collaborations = this.processCollaborations(response.data.data);
           this.discoverDialogVisible = true;
         })
         .catch(error => {
@@ -550,6 +660,7 @@ export default {
         });
     },
     deployProcess(row) {
+      console.log("row", row)
       const payload = {
         engineType: row.engineCategory,
         url: '',
