@@ -84,7 +84,7 @@ const routes = [
 
 const router = new VueRouter({
   routes,
-  mode: 'hash',
+  mode: 'history',
 })
 
 //挂载路由导航守卫

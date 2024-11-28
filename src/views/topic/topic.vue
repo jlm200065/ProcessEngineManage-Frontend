@@ -31,8 +31,6 @@
         <el-table-column prop="id" label="ID" width="360px"></el-table-column>
         <el-table-column prop="topic" label="Topic" width="480px"></el-table-column>
 
-
-
         <el-table-column label="操作" width="180">
           <template slot-scope="scope">
             <el-tooltip effect="dark" content="修改Topic信息" placement="top" :enterable="false" :open-delay="500">
@@ -63,10 +61,23 @@
         <el-form-item label="Topic" prop="topic">
           <el-input v-model="addForm.topic"></el-input>
         </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="searchPossibleTopics">查找</el-button>
+        </el-form-item>
+        <el-form-item v-if="possibleTopics.length">
+          <div>
+            <el-button
+              v-for="(topic, index) in possibleTopics"
+              :key="index"
+              type="text"
+              @click="selectTopic(topic)">
+              {{ topic }}
+            </el-button>
+          </div>
+        </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="addTopic">确定</el-button>
       </span>
     </el-dialog>
 
@@ -86,6 +97,9 @@
 </template>
 
 <script>
+import axios from "axios";
+import config from "@/config";
+
 export default {
   data() {
     return {
@@ -113,8 +127,9 @@ export default {
       },
       inputTopic: '',
       topicList: [],
-      multipleSelection: []
-    }
+      multipleSelection: [],
+      possibleTopics: []
+    };
   },
   created() {
     this.getTopicList();
@@ -122,13 +137,41 @@ export default {
   methods: {
     getTopicList() {
       this.queryInfo.topic = this.inputTopic;
-      axios.post('/topic/all', this.queryInfo).then(resp => {
+      axios.post(config.apiBaseUrl + 'topic/all', this.queryInfo).then(resp => {
         this.topicList = resp.data.data.list;
         this.total = resp.data.data.total;
         this.queryInfo.pageSize = resp.data.data.pageSize;
         this.queryInfo.pageNum = resp.data.data.pageNum;
       }).catch(error => {
         console.error(error);
+      });
+    },
+    searchPossibleTopics() {
+      const prompt = this.addForm.topic;
+      axios.post(config.tongyiUrl + 'api/rag', {
+        appId: "614c78e6ca8d44369958d13640511287",
+        prompt: prompt
+      }).then(resp => {
+        const data = resp.data.data;
+        this.possibleTopics = data.slice(1, -1).split(",").map(item => item.trim());
+      }).catch(error => {
+        console.error(error);
+      });
+    },
+    selectTopic(topic) {
+      this.addForm.topic = topic;
+      this.addTopic();
+    },
+    addTopic() {
+      this.$refs.addFormRef.validate(valid => {
+        if (!valid) return;
+        axios.post(config.apiBaseUrl + 'topic/add', this.addForm).then(() => {
+          this.getTopicList();
+          this.addDialogVisible = false;
+          this.possibleTopics = [];
+        }).catch(error => {
+          console.error(error);
+        });
       });
     },
     handleSizeChange(newSize) {
@@ -144,20 +187,10 @@ export default {
     },
     addDialogClosed() {
       this.$refs.addFormRef.resetFields();
-    },
-    addTopic() {
-      this.$refs.addFormRef.validate(valid => {
-        if (!valid) return;
-        axios.post('/topic/add', this.addForm).then(resp => {
-          this.getTopicList();
-          this.addDialogVisible = false;
-        }).catch(error => {
-          console.error(error);
-        });
-      });
+      this.possibleTopics = [];
     },
     showEditDialog(id) {
-      axios.get(`/topic/${id}`).then(resp => {
+      axios.get(config.apiBaseUrl + `topic/${id}`).then(resp => {
         this.editForm = resp.data.data;
         this.editDialogVisible = true;
       }).catch(error => {
@@ -173,7 +206,7 @@ export default {
     editTopicInfo() {
       this.$refs.editFormRef.validate(valid => {
         if (!valid) return;
-        axios.put('/topic/update', this.editForm).then(resp => {
+        axios.put(config.apiBaseUrl + 'topic/update', this.editForm).then(() => {
           this.getTopicList();
           this.editDialogVisible = false;
         }).catch(error => {
@@ -186,21 +219,21 @@ export default {
     },
     multipleDelete() {
       const ids = this.multipleSelection.map(item => item.id);
-      axios.delete('/topic/delete', { data: ids }).then(resp => {
+      axios.delete(config.apiBaseUrl + 'topic/delete', { data: ids }).then(() => {
         this.getTopicList();
       }).catch(error => {
         console.error(error);
       });
     },
     deleteTopicById(id) {
-      axios.delete(`/topic/delete/${id}`).then(resp => {
+      axios.delete(config.apiBaseUrl + `topic/delete/${id}`).then(() => {
         this.getTopicList();
       }).catch(error => {
         console.error(error);
       });
     }
   }
-}
+};
 </script>
 
 <style scoped>
